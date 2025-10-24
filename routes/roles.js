@@ -1,40 +1,73 @@
-var express = require('express');
+var express = require("express");
 var router = express.Router();
-let roleSchema = require('../schemas/roles')
+let roles = require("../schemas/role");
+let { Authentication, Authorization } = require("../utils/authMiddleware");
+let { Response } = require("../utils/responseHandler");
 
-/* GET users listing. */
-router.get('/', async function(req, res, next) {
-  let roles = await roleSchema.find({isDeleted:false});
-  res.send({
-    success:true,
-    data:roles
-  });
-});
-router.get('/:id', async function(req, res, next) {
+// =============================
+// 🔹 Lấy tất cả role (chỉ ADMIN)
+// =============================
+router.get("/", Authentication, Authorization("ADMIN"), async (req, res) => {
   try {
-    let role = await roleSchema.findById(req.params.id);
-    res.send({
-    success:true,
-    data:role
-  });
+    let allRoles = await roles.find({ isDeleted: false });
+    Response(res, 200, true, allRoles);
   } catch (error) {
-    res.status(404).send({
-      success:false,
-      data:error
-    })
+    Response(res, 500, false, error.message);
   }
- 
 });
 
-router.post('/', async function(req, res, next) {
-  let newRole = new roleSchema({
-    name:req.body.name
-  })
-  await newRole.save();
-  res.send({
-      success:true,
-      data:newRole
-    })
+// =============================
+// 🔹 Lấy role theo ID (chỉ ADMIN)
+// =============================
+router.get("/:id", Authentication, Authorization("ADMIN"), async (req, res) => {
+  try {
+    let role = await roles.findById(req.params.id);
+    if (!role || role.isDeleted)
+      return Response(res, 404, false, "Role không tồn tại");
+    Response(res, 200, true, role);
+  } catch (error) {
+    Response(res, 500, false, error.message);
+  }
 });
+
+// =============================
+// 🔹 Tạo role mới (chỉ ADMIN)
+// =============================
+router.post("/", Authentication, Authorization("ADMIN"), async (req, res) => {
+  try {
+    let { name, permissions } = req.body;
+    if (!name) return Response(res, 400, false, "Thiếu tên role");
+
+    let exist = await roles.findOne({ name });
+    if (exist) return Response(res, 400, false, "Role đã tồn tại");
+
+    let newRole = new roles({ name, permissions });
+    await newRole.save();
+
+    Response(res, 201, true, "Tạo role thành công");
+  } catch (error) {
+    Response(res, 500, false, error.message);
+  }
+});
+
+// =============================
+// 🔹 Xóa mềm role (chỉ ADMIN)
+// =============================
+router.delete(
+  "/:id",
+  Authentication,
+  Authorization("ADMIN"),
+  async (req, res) => {
+    try {
+      let role = await roles.findById(req.params.id);
+      if (!role) return Response(res, 404, false, "Không tìm thấy role");
+
+      await role.softDelete();
+      Response(res, 200, true, "Xóa mềm role thành công");
+    } catch (error) {
+      Response(res, 500, false, error.message);
+    }
+  }
+);
 
 module.exports = router;
