@@ -1,40 +1,33 @@
-let { Response } = require('./responseHandler')
-let jwt = require("jsonwebtoken")
-let users = require('../schemas/users')
+let { Response } = require("../utils/responseHandler");
+let jwt = require("jsonwebtoken");
+let users = require("../schemas/users");
 
 module.exports = {
-    Authentication: async function (req, res, next) {
-        let token = req.headers.authorization ? req.headers.authorization : req.cookies.token;
-        if (token && token.startsWith("Bearer")) {
-            token = token.split(" ")[1];
-            if (jwt.verify(token, "NNPTUD")) {
-                if (jwt.decode(token).exp < Date.now()) {
-                    Response(res, 403, false, "user chua dang nhap");
-                } else {
-                    let userId = jwt.decode(token)._id;
-                    req.userId = userId;
-                    next();
-                }
-            } else {
-                Response(res, 403, false, "user chua dang nhap");
-            }
-        } else {
-            Response(res, 403, false, "user chua dang nhap");
-        }
-    },
-    Authorization: function (...roleRequire) {
-        return async function (req, res, next) {
-            let userId = req.userId;
-            let user = await users.findById(userId).populate({
-                path: 'role',
-                select: 'name'
-            });
-            let role = user.role.name;
-            if(roleRequire.includes(role)){
-                next();
-            }else{
-                Response(res, 403, false, "ban khong du quyen");
-            }
-        }
+  Authentication: async function (req, res, next) {
+    try {
+      let token = req.headers.authorization?.split(" ")[1] || req.cookies.token;
+      if (!token) return Response(res, 401, false, "Token not found");
+
+      let decoded = jwt.verify(token, "NNPTUD");
+      req.userId = decoded._id;
+      next();
+    } catch (err) {
+      Response(res, 403, false, "Token invalid or expired");
     }
-}
+  },
+
+  Authorization: function (...rolesRequired) {
+    return async function (req, res, next) {
+      try {
+        let user = await users.findById(req.userId).populate("role");
+        if (!user) return Response(res, 404, false, "User not found");
+
+        let userRole = user.role?.name;
+        if (rolesRequired.includes(userRole)) next();
+        else Response(res, 403, false, "Không đủ quyền truy cập");
+      } catch (err) {
+        Response(res, 500, false, err.message);
+      }
+    };
+  },
+};

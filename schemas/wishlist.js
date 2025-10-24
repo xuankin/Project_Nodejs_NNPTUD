@@ -1,4 +1,5 @@
 let mongoose = require("mongoose");
+let softDelete = require("./plugins/softDelete");
 
 let wishlistSchema = new mongoose.Schema(
   {
@@ -8,4 +9,5 @@ let wishlistSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+wishlistSchema.plugin(softDelete);
 module.exports = mongoose.model("wishlist", wishlistSchema);

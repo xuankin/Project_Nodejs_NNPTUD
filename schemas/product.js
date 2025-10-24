@@ -1,4 +1,5 @@
 let mongoose = require("mongoose");
+let softDelete = require("./plugins/softDelete");
 
 let productSchema = new mongoose.Schema(
   {
@@ -10,9 +11,9 @@ let productSchema = new mongoose.Schema(
     images: [String],
     category: { type: mongoose.Schema.Types.ObjectId, ref: "category" },
     seller: { type: mongoose.Schema.Types.ObjectId, ref: "user" },
-    isDeleted: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
 
+productSchema.plugin(softDelete);
 module.exports = mongoose.model("product", productSchema);

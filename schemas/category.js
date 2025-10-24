@@ -1,10 +1,11 @@
 let mongoose = require("mongoose");
+let softDelete = require("./plugins/softDelete");
 
 let categorySchema = new mongoose.Schema(
   {
     name: { type: String, required: true, unique: true },
-    description: { type: String },
-    imageURL: { type: String },
+    description: String,
+    imageURL: String,
     parentCategory: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "category",
@@ -14,4 +15,5 @@ let categorySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+categorySchema.plugin(softDelete);
 module.exports = mongoose.model("category", categorySchema);

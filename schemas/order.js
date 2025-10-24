@@ -1,4 +1,5 @@
 let mongoose = require("mongoose");
+let softDelete = require("./plugins/softDelete");
 
 let orderSchema = new mongoose.Schema(
   {
@@ -22,4 +23,5 @@ let orderSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+orderSchema.plugin(softDelete);
 module.exports = mongoose.model("order", orderSchema);

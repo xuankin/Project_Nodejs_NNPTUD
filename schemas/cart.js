@@ -1,4 +1,5 @@
 let mongoose = require("mongoose");
+let softDelete = require("./plugins/softDelete");
 
 let cartSchema = new mongoose.Schema(
   {
@@ -14,4 +15,5 @@ let cartSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+cartSchema.plugin(softDelete);
 module.exports = mongoose.model("cart", cartSchema);

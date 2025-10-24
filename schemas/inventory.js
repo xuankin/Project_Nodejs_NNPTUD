@@ -1,4 +1,5 @@
 let mongoose = require("mongoose");
+let softDelete = require("./plugins/softDelete");
 
 let inventorySchema = new mongoose.Schema(
   {
@@ -10,4 +11,5 @@ let inventorySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+inventorySchema.plugin(softDelete);
 module.exports = mongoose.model("inventory", inventorySchema);

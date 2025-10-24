@@ -1,4 +1,5 @@
 let mongoose = require("mongoose");
+let softDelete = require("./plugins/softDelete");
 
 let couponSchema = new mongoose.Schema(
   {
@@ -11,4 +12,5 @@ let couponSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+couponSchema.plugin(softDelete);
 module.exports = mongoose.model("coupon", couponSchema);

@@ -1,4 +1,5 @@
 let mongoose = require("mongoose");
+let softDelete = require("./plugins/softDelete");
 
 let notificationSchema = new mongoose.Schema(
   {
@@ -14,4 +15,5 @@ let notificationSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+notificationSchema.plugin(softDelete);
 module.exports = mongoose.model("notification", notificationSchema);

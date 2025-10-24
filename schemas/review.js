@@ -1,4 +1,5 @@
 let mongoose = require("mongoose");
+let softDelete = require("./plugins/softDelete");
 
 let reviewSchema = new mongoose.Schema(
   {
@@ -10,4 +11,5 @@ let reviewSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+reviewSchema.plugin(softDelete);
 module.exports = mongoose.model("review", reviewSchema);
