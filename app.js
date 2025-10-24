@@ -31,6 +31,7 @@ app.use("/", indexRouter);
 app.use("/users", usersRouter);
 app.use("/roles", require("./routes/roles"));
 app.use("/auth", require("./routes/auth"));
+app.use("/upload", require("./routes/upload"));
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
