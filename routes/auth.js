@@ -55,6 +55,7 @@ router.post("/login", async (req, res) => {
 
     let validPass = bcrypt.compareSync(password, user.password);
     if (!validPass) return Response(res, 400, false, "Sai mật khẩu");
+    console.log("DEBUG ROLE:", user.role);
 
     let token = jwt.sign({ _id: user._id, role: user.role.name }, "NNPTUD", {
       expiresIn: "2h",
