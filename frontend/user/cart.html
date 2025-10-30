@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Giỏ hàng - PhoneShop</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../assets/css/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-expand-lg navbar-dark bg-primary"
+      id="navbar"
+    ></nav>
+    <div class="container my-5">
+      <h2>Giỏ hàng của bạn</h2>
+      <table class="table" id="cartTable">
+        <thead>
+          <tr>
+            <th>Sản phẩm</th>
+            <th>Giá</th>
+            <th>Số lượng</th>
+            <th>Tổng</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="text-end">
+        <h4>Tổng tiền: <span id="totalAmount">0</span>đ</h4>
+        <button class="btn btn-success" onclick="checkout()">Thanh toán</button>
+      </div>
+    </div>
+
+    <script src="../assets/js/api.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/user.js"></script>
+    <script>
+      if (!isLoggedIn()) {
+        alert("Vui lòng đăng nhập!");
+        window.location.href = "/login.html";
+      }
+
+      async function loadCart() {
+        const cart = await GET("/carts/me");
+        const tbody = document.querySelector("#cartTable tbody");
+        if (!cart || !cart.items || cart.items.length === 0) {
+          tbody.innerHTML =
+            "<tr><td colspan='5' class='text-center'>Giỏ hàng trống</td></tr>";
+          document.getElementById("totalAmount").textContent = 0;
+          return;
+        }
+
+        let total = 0;
+        tbody.innerHTML = "";
+        cart.items.forEach((item) => {
+          const price = item.product?.price || 0; // Kiểm tra undefined
+          const lineTotal = price * item.quantity;
+          total += lineTotal;
+          tbody.innerHTML += `
+          <tr>
+            <td>${item.product?.name || "Unknown"}</td>
+            <td>${price.toLocaleString()}đ</td>
+            <td>${item.quantity}</td>
+            <td>${lineTotal.toLocaleString()}đ</td>
+            <td><button class="btn btn-sm btn-danger" onclick="removeFromCart('${
+              item.product._id
+            }')">Xóa</button></td>
+          </tr>
+        `;
+        });
+        document.getElementById("totalAmount").textContent =
+          total.toLocaleString();
+      }
+
+      async function removeFromCart(productId) {
+        await DEL(`/carts/${productId}`);
+        loadCart();
+      }
+
+      async function checkout() {
+        const coupon = prompt("Nhập mã giảm giá (nếu có):");
+        const order = await POST("/orders", { couponCode: coupon || null });
+        if (order) {
+          alert("Đặt hàng thành công! ID: " + order._id);
+          window.location.href = "/user/orders.html";
+        }
+      }
+
+      loadCart();
+    </script>
+  </body>
+</html>

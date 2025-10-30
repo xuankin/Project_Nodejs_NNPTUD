@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Quản lý Người dùng - Admin</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../assets/css/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark" id="navbar"></nav>
+    <div class="container my-5">
+      <h2>Quản lý Người dùng</h2>
+      <button
+        class="btn btn-success mb-3"
+        data-bs-toggle="modal"
+        data-bs-target="#userModal"
+      >
+        Thêm người dùng
+      </button>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Tên</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Hành động</th>
+          </tr>
+        </thead>
+        <tbody id="userTable"></tbody>
+      </table>
+    </div>
+
+    <div class="modal fade" id="userModal">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 id="modalTitle">Thêm người dùng</h5>
+          </div>
+          <div class="modal-body">
+            <form id="userForm">
+              <input type="hidden" id="userId" />
+              <input
+                type="text"
+                class="form-control mb-2"
+                id="username"
+                placeholder="Tên đăng nhập"
+                required
+              />
+              <input
+                type="email"
+                class="form-control mb-2"
+                id="email"
+                placeholder="Email"
+                required
+              />
+              <input
+                type="text"
+                class="form-control mb-2"
+                id="fullName"
+                placeholder="Họ tên"
+                required
+              />
+              <input
+                type="password"
+                class="form-control mb-2"
+                id="password"
+                placeholder="Mật khẩu"
+                required
+              />
+              <select class="form-control" id="role"></select>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-primary" onclick="saveUser()">Lưu</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../assets/js/api.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script>
+      async function loadUsers() {
+        const users = await GET("/users");
+        const roles = await GET("/roles");
+        document.getElementById("userTable").innerHTML = users
+          .map(
+            (u) => `
+        <tr>
+          <td>${u._id}</td>
+          <td>${u.fullName}</td>
+          <td>${u.email}</td>
+          <td>${u.role.name}</td>
+          <td>
+            <button class="btn btn-sm btn-warning" onclick="editUser('${u._id}')">Sửa</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteUser('${u._id}')">Xóa</button>
+            <button class="btn btn-sm btn-info" onclick="restoreUser('${u._id}')">Khôi phục</button>
+          </td>
+        </tr>
+      `
+          )
+          .join("");
+
+        const select = document.getElementById("role");
+        select.innerHTML = roles
+          .map((r) => `<option value="${r._id}">${r.name}</option>`)
+          .join("");
+      }
+
+      async function editUser(id) {
+        const u = await GET(`/users/${id}`);
+        document.getElementById("userId").value = u._id;
+        document.getElementById("username").value = u.username;
+        document.getElementById("email").value = u.email;
+        document.getElementById("fullName").value = u.fullName;
+        document.getElementById("role").value = u.role._id;
+        new bootstrap.Modal(document.getElementById("userModal")).show();
+      }
+
+      async function saveUser() {
+        const id = document.getElementById("userId").value;
+        const body = {
+          username: document.getElementById("username").value,
+          email: document.getElementById("email").value,
+          fullName: document.getElementById("fullName").value,
+          password: document.getElementById("password").value,
+          role: document.getElementById("role").value,
+        };
+
+        if (id) await PUT(`/users/${id}`, body);
+        else await POST("/users", body);
+        bootstrap.Modal.getInstance(
+          document.getElementById("userModal")
+        ).hide();
+        loadUsers();
+      }
+
+      async function deleteUser(id) {
+        if (confirm("Xóa?")) {
+          await DEL(`/users/${id}`);
+          loadUsers();
+        }
+      }
+
+      async function restoreUser(id) {
+        if (confirm("Khôi phục?")) {
+          await POST(`/users/restore/${id}`, {});
+          loadUsers();
+        }
+      }
+
+      loadUsers();
+    </script>
+  </body>
+</html>

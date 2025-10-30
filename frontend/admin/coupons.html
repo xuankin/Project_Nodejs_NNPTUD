@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Quản lý Mã giảm giá - Admin</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../assets/css/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark" id="navbar"></nav>
+    <div class="container my-5">
+      <h2>Quản lý Mã giảm giá</h2>
+      <button
+        class="btn btn-success mb-3"
+        data-bs-toggle="modal"
+        data-bs-target="#couponModal"
+      >
+        Thêm coupon
+      </button>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Mã</th>
+            <th>Loại</th>
+            <th>Giá trị</th>
+            <th>Tối đa</th>
+            <th>Min</th>
+            <th>Hết hạn</th>
+            <th>Hành động</th>
+          </tr>
+        </thead>
+        <tbody id="couponTable"></tbody>
+      </table>
+    </div>
+
+    <div class="modal fade" id="couponModal">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 id="modalTitle">Thêm coupon</h5>
+          </div>
+          <div class="modal-body">
+            <form id="couponForm">
+              <input type="hidden" id="couponId" />
+              <input
+                type="text"
+                class="form-control mb-2"
+                id="code"
+                placeholder="Mã"
+                required
+              />
+              <select class="form-control mb-2" id="discountType">
+                <option value="percent">Phần trăm</option>
+                <option value="fixed">Cố định</option>
+              </select>
+              <input
+                type="number"
+                class="form-control mb-2"
+                id="discountValue"
+                placeholder="Giá trị"
+                required
+              />
+              <input
+                type="number"
+                class="form-control mb-2"
+                id="maxDiscount"
+                placeholder="Tối đa"
+              />
+              <input
+                type="number"
+                class="form-control mb-2"
+                id="minAmount"
+                placeholder="Min đơn"
+                required
+              />
+              <input
+                type="date"
+                class="form-control mb-2"
+                id="validTo"
+                required
+              />
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-primary" onclick="saveCoupon()">Lưu</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../assets/js/api.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script>
+      async function loadCoupons() {
+        const coupons = await GET("/coupons");
+        document.getElementById("couponTable").innerHTML = coupons
+          .map(
+            (c) => `
+        <tr>
+          <td>${c.code}</td>
+          <td>${c.discountType}</td>
+          <td>${c.discountValue}</td>
+          <td>${c.maxDiscount || ""}</td>
+          <td>${c.minAmount}</td>
+          <td>${new Date(c.validTo).toLocaleDateString()}</td>
+          <td>
+            <button class="btn btn-sm btn-warning" onclick="editCoupon('${
+              c._id
+            }')">Sửa</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteCoupon('${
+              c._id
+            }')">Xóa</button>
+          </td>
+        </tr>
+      `
+          )
+          .join("");
+      }
+
+      async function editCoupon(id) {
+        const c = await GET(`/coupons/${id}`);
+        document.getElementById("couponId").value = c._id;
+        document.getElementById("code").value = c.code;
+        document.getElementById("discountType").value = c.discountType;
+        document.getElementById("discountValue").value = c.discountValue;
+        document.getElementById("maxDiscount").value = c.maxDiscount;
+        document.getElementById("minAmount").value = c.minAmount;
+        document.getElementById("validTo").value = new Date(c.validTo)
+          .toISOString()
+          .split("T")[0];
+        new bootstrap.Modal(document.getElementById("couponModal")).show();
+      }
+
+      async function saveCoupon() {
+        const id = document.getElementById("couponId").value;
+        const body = {
+          code: document.getElementById("code").value,
+          discountType: document.getElementById("discountType").value,
+          discountValue: parseFloat(
+            document.getElementById("discountValue").value
+          ),
+          maxDiscount: parseFloat(document.getElementById("maxDiscount").value),
+          minAmount: parseFloat(document.getElementById("minAmount").value),
+          validTo: document.getElementById("validTo").value,
+        };
+
+        if (id) await PUT(`/coupons/${id}`, body);
+        else await POST("/coupons", body);
+        bootstrap.Modal.getInstance(
+          document.getElementById("couponModal")
+        ).hide();
+        loadCoupons();
+      }
+
+      async function deleteCoupon(id) {
+        if (confirm("Xóa?")) {
+          await DEL(`/coupons/${id}`);
+          loadCoupons();
+        }
+      }
+
+      loadCoupons();
+    </script>
+  </body>
+</html>

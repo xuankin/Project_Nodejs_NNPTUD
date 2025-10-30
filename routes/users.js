@@ -1,35 +1,49 @@
-var express = require("express");
-var router = express.Router();
-let users = require("../schemas/user");
-let roles = require("../schemas/role");
-let bcrypt = require("bcrypt");
-let { Authentication, Authorization } = require("../utils/authMiddleware");
-let { Response } = require("../utils/responseHandler");
+// routes/users.js
+const express = require("express");
+const router = express.Router();
+const User = require("../schemas/user");
+const Role = require("../schemas/role");
+const bcrypt = require("bcrypt");
+const { Authentication, Authorization } = require("../utils/authMiddleware");
+const { Response } = require("../utils/responseHandler");
 
-// =============================
-// 🔹 Lấy danh sách tất cả user (chỉ ADMIN)
-// =============================
+// LẤY THÔNG TIN USER ĐANG ĐĂNG NHẬP
+router.get("/me", Authentication, async (req, res) => {
+  try {
+    const user = await User.findById(req.userId)
+      .populate({ path: "role", select: "name" })
+      .select("-password");
+    if (!user || user.isDeleted) {
+      return Response(res, 404, false, "Người dùng không tồn tại");
+    }
+    Response(res, 200, true, user);
+  } catch (error) {
+    Response(res, 500, false, error.message);
+  }
+});
+
+// Lấy danh sách tất cả user (ADMIN)
 router.get("/", Authentication, Authorization("ADMIN"), async (req, res) => {
   try {
-    let allUsers = await users
-      .find({ isDeleted: false })
-      .populate({ path: "role", select: "name" });
+    const allUsers = await User.find({ isDeleted: false })
+      .populate({ path: "role", select: "name" })
+      .select("-password");
     Response(res, 200, true, allUsers);
   } catch (error) {
     Response(res, 500, false, error.message);
   }
 });
 
-// =============================
-// 🔹 Lấy thông tin chi tiết user theo ID (ADMIN hoặc chính user đó)
-// =============================
+// Lấy chi tiết user theo ID
 router.get("/:id", Authentication, async (req, res) => {
   try {
-    let user = await users.findById(req.params.id).populate("role");
-    if (!user || user.isDeleted)
+    const user = await User.findById(req.params.id)
+      .populate("role")
+      .select("-password");
+    if (!user || user.isDeleted) {
       return Response(res, 404, false, "Người dùng không tồn tại");
+    }
 
-    // Chỉ cho phép ADMIN hoặc chính user đó xem thông tin
     if (req.userId !== user._id.toString() && req.userRole !== "ADMIN") {
       return Response(res, 403, false, "Bạn không có quyền xem thông tin này");
     }
@@ -40,30 +54,26 @@ router.get("/:id", Authentication, async (req, res) => {
   }
 });
 
-// =============================
-// 🔹 Tạo mới user (ADMIN hoặc SELLER)
-// =============================
+// Tạo user mới (ADMIN, SELLER)
 router.post(
   "/",
   Authentication,
   Authorization("ADMIN", "SELLER"),
   async (req, res) => {
     try {
-      let { username, email, password, fullName, role } = req.body;
-      if (!username || !email || !password)
+      const { username, email, password, fullName, role } = req.body;
+      if (!username || !email || !password) {
         return Response(res, 400, false, "Thiếu thông tin bắt buộc");
+      }
 
-      // Kiểm tra trùng username/email
-      let exists = await users.findOne({ $or: [{ username }, { email }] });
+      const exists = await User.findOne({ $or: [{ username }, { email }] });
       if (exists) return Response(res, 400, false, "Tài khoản đã tồn tại");
 
-      let foundRole = await roles.findOne({ name: role || "USER" });
+      const foundRole = await Role.findOne({ name: role || "USER" });
       if (!foundRole) return Response(res, 400, false, "Role không hợp lệ");
 
-      // Mã hóa mật khẩu
-      let hash = bcrypt.hashSync(password, 10);
-
-      let newUser = new users({
+      const hash = bcrypt.hashSync(password, 10);
+      const newUser = new User({
         username,
         email,
         password: hash,
@@ -79,16 +89,14 @@ router.post(
   }
 );
 
-// =============================
-// 🔹 Cập nhật thông tin người dùng (ADMIN hoặc chính user đó)
-// =============================
+// Cập nhật user
 router.put("/:id", Authentication, async (req, res) => {
   try {
-    let user = await users.findById(req.params.id);
-    if (!user || user.isDeleted)
+    const user = await User.findById(req.params.id);
+    if (!user || user.isDeleted) {
       return Response(res, 404, false, "Người dùng không tồn tại");
+    }
 
-    // Chỉ cho phép ADMIN hoặc chính user đó cập nhật
     if (req.userId !== user._id.toString() && req.userRole !== "ADMIN") {
       return Response(
         res,
@@ -102,8 +110,7 @@ router.put("/:id", Authentication, async (req, res) => {
     user.fullName = req.body.fullName || user.fullName;
 
     if (req.body.password) {
-      let salt = bcrypt.genSaltSync(10);
-      user.password = bcrypt.hashSync(req.body.password, salt);
+      user.password = bcrypt.hashSync(req.body.password, 10);
     }
 
     await user.save();
@@ -113,16 +120,14 @@ router.put("/:id", Authentication, async (req, res) => {
   }
 });
 
-// =============================
-// 🔹 Xóa mềm người dùng (chỉ ADMIN)
-// =============================
+// Xóa mềm
 router.delete(
   "/:id",
   Authentication,
   Authorization("ADMIN"),
   async (req, res) => {
     try {
-      let user = await users.findById(req.params.id);
+      const user = await User.findById(req.params.id);
       if (!user) return Response(res, 404, false, "Không tìm thấy người dùng");
 
       await user.softDelete();
@@ -133,16 +138,14 @@ router.delete(
   }
 );
 
-// =============================
-// 🔹 Khôi phục người dùng (chỉ ADMIN)
-// =============================
+// Khôi phục
 router.post(
   "/restore/:id",
   Authentication,
   Authorization("ADMIN"),
   async (req, res) => {
     try {
-      let user = await users.findById(req.params.id, { includeDeleted: true });
+      const user = await User.findById(req.params.id, { includeDeleted: true });
       if (!user) return Response(res, 404, false, "Không tìm thấy người dùng");
 
       await user.restore();

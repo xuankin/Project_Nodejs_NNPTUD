@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Quản lý Kho - Admin</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../assets/css/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark" id="navbar"></nav>
+    <div class="container my-5">
+      <h2>Quản lý Kho</h2>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Sản phẩm</th>
+            <th>Tồn kho</th>
+            <th>Hành động</th>
+          </tr>
+        </thead>
+        <tbody id="inventoryTable"></tbody>
+      </table>
+    </div>
+
+    <script src="../assets/js/api.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script>
+      async function loadInventory() {
+        const inventories = await GET("/inventories");
+        document.getElementById("inventoryTable").innerHTML = inventories
+          .map(
+            (i) => `
+        <tr>
+          <td>${i.product.name}</td>
+          <td>${i.currentStock}</td>
+          <td>
+            <button class="btn btn-sm btn-warning" onclick="updateInventory('${i.product._id}')">Cập nhật</button>
+          </td>
+        </tr>
+      `
+          )
+          .join("");
+      }
+
+      async function updateInventory(productId) {
+        const quantityIn = prompt("Nhập số lượng nhập kho:");
+        const quantityOut = prompt("Nhập số lượng xuất kho:");
+        await PUT(`/inventory/${productId}`, {
+          quantityIn: parseInt(quantityIn),
+          quantityOut: parseInt(quantityOut),
+        });
+        alert("Cập nhật thành công!");
+        loadInventory();
+      }
+
+      loadInventory();
+    </script>
+  </body>
+</html>

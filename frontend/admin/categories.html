@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Quản lý Danh mục - Admin</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../assets/css/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark" id="navbar"></nav>
+    <div class="container my-5">
+      <h2>Quản lý Danh mục</h2>
+      <button
+        class="btn btn-success mb-3"
+        data-bs-toggle="modal"
+        data-bs-target="#categoryModal"
+      >
+        Thêm danh mục
+      </button>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Tên</th>
+            <th>Mô tả</th>
+            <th>Cha</th>
+            <th>Hành động</th>
+          </tr>
+        </thead>
+        <tbody id="categoryTable"></tbody>
+      </table>
+    </div>
+
+    <div class="modal fade" id="categoryModal">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 id="modalTitle">Thêm danh mục</h5>
+          </div>
+          <div class="modal-body">
+            <form id="categoryForm">
+              <input type="hidden" id="categoryId" />
+              <input
+                type="text"
+                class="form-control mb-2"
+                id="name"
+                placeholder="Tên"
+                required
+              />
+              <textarea
+                class="form-control mb-2"
+                id="description"
+                placeholder="Mô tả"
+              ></textarea>
+              <input
+                type="file"
+                class="form-control mb-2"
+                id="imageURL"
+                accept="image/*"
+              />
+              <select class="form-control" id="parentCategory">
+                <option value="">Không có cha</option>
+              </select>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-primary" onclick="saveCategory()">
+              Lưu
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../assets/js/api.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script>
+      if (getRole() !== "ADMIN") {
+        alert("Không có quyền!");
+        window.location.href = "/";
+      }
+
+      async function loadCategories() {
+        const categories = await GET("/categories");
+        document.getElementById("categoryTable").innerHTML = categories
+          .map(
+            (c) => `
+        <tr>
+          <td>${c.name}</td>
+          <td>${c.description}</td>
+          <td>${c.parentCategory?.name || "—"}</td>
+          <td>
+            <button class="btn btn-sm btn-warning" onclick="editCategory('${
+              c._id
+            }')">Sửa</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteCategory('${
+              c._id
+            }')">Xóa</button>
+          </td>
+        </tr>
+      `
+          )
+          .join("");
+
+        const select = document.getElementById("parentCategory");
+        select.innerHTML =
+          "<option value=''>Không có cha</option>" +
+          categories
+            .map((c) => `<option value="${c._id}">${c.name}</option>`)
+            .join("");
+      }
+
+      async function editCategory(id) {
+        const c = await GET(`/categories/${id}`);
+        document.getElementById("categoryId").value = c._id;
+        document.getElementById("name").value = c.name;
+        document.getElementById("description").value = c.description;
+        document.getElementById("parentCategory").value =
+          c.parentCategory?._id || "";
+        new bootstrap.Modal(document.getElementById("categoryModal")).show();
+      }
+
+      async function saveCategory() {
+        const id = document.getElementById("categoryId").value;
+        const body = {
+          name: document.getElementById("name").value,
+          description: document.getElementById("description").value,
+          parentCategory:
+            document.getElementById("parentCategory").value || null,
+        };
+
+        const file = document.getElementById("imageURL").files[0];
+        if (file) {
+          const formData = new FormData();
+          formData.append("file", file);
+          const res = await UPLOAD_SINGLE(formData);
+          body.imageURL = res.path;
+        }
+
+        try {
+          id
+            ? await PUT(`/categories/${id}`, body)
+            : await POST("/categories", body);
+          bootstrap.Modal.getInstance(
+            document.getElementById("categoryModal")
+          ).hide();
+          loadCategories();
+        } catch (err) {
+          alert("Lỗi: " + err.message);
+        }
+      }
+
+      async function deleteCategory(id) {
+        if (confirm("Xóa danh mục?")) {
+          await DEL(`/categories/${id}`);
+          loadCategories();
+        }
+      }
+
+      loadCategories();
+    </script>
+  </body>
+</html>
