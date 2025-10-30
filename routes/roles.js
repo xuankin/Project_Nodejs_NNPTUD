@@ -62,6 +62,23 @@ router.delete(
       let role = await roles.findById(req.params.id);
       if (!role) return Response(res, 404, false, "Không tìm thấy role");
 
+      // 🎯 BỔ SUNG: KIỂM TRA PHỤ THUỘC TỪ USER
+      const User = require("../schemas/user"); // Cần import User
+      const userCount = await User.countDocuments({
+        role: req.params.id,
+        isDeleted: false,
+      });
+
+      if (userCount > 0) {
+        return Response(
+          res,
+          400,
+          false,
+          `Không thể xóa: Có ${userCount} người dùng đang có vai trò này`
+        );
+      }
+      // 🎯 KẾT THÚC BỔ SUNG
+
       await role.softDelete();
       Response(res, 200, true, "Xóa mềm role thành công");
     } catch (error) {

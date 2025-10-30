@@ -119,6 +119,7 @@ router.put(
 );
 
 // XÓA MỀM
+// XÓA MỀM
 router.delete(
   "/:id",
   Authentication,
@@ -127,7 +128,17 @@ router.delete(
     try {
       const product = await Product.findById(req.params.id);
       if (!product) return Response(res, 404, false, "Không tìm thấy");
+
+      // 1. Xóa mềm sản phẩm
       await product.softDelete();
+
+      // 🎯 BỔ SUNG: Xóa mềm bản ghi Inventory liên quan
+      const inv = await Inventory.findOne({ product: req.params.id });
+      if (inv) {
+        await inv.softDelete();
+      }
+      // 🎯 KẾT THÚC BỔ SUNG
+
       Response(res, 200, true, "Xóa thành công");
     } catch (err) {
       Response(res, 500, false, err.message);
