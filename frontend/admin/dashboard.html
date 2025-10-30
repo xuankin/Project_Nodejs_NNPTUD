@@ -10,33 +10,87 @@
     />
     <link rel="stylesheet" href="../assets/css/style.css" />
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   </head>
   <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark" id="navbar"></nav>
     <div class="container my-5">
-      <h2>Thống kê hệ thống</h2>
-      <div class="row">
-        <div class="col-md-4">
-          <div class="card text-white bg-primary">
+      <h2>Thống kê Hệ thống Chuyên nghiệp</h2>
+
+      <div class="row g-4 mb-4">
+        <div class="col-md-3">
+          <div class="card text-white bg-warning">
             <div class="card-body">
-              <h5>Tổng sản phẩm</h5>
-              <h3 id="totalProducts">0</h3>
+              <h5 class="card-title">💰 Tổng Doanh thu</h5>
+              <h3 id="totalRevenue">0đ</h3>
             </div>
           </div>
         </div>
-        <div class="col-md-4">
-          <div class="card text-white bg-success">
+        <div class="col-md-3">
+          <div class="card text-white bg-primary">
             <div class="card-body">
-              <h5>Tổng đơn hàng</h5>
+              <h5 class="card-title">📦 Tổng Đơn hàng</h5>
               <h3 id="totalOrders">0</h3>
             </div>
           </div>
         </div>
-        <div class="col-md-4">
-          <div class="card text-white bg-warning">
+        <div class="col-md-3">
+          <div class="card text-white bg-info">
             <div class="card-body">
-              <h5>Doanh thu</h5>
-              <h3 id="totalRevenue">0đ</h3>
+              <h5 class="card-title">📱 Tổng Sản phẩm</h5>
+              <h3 id="totalProducts">0</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card text-white bg-success">
+            <div class="card-body">
+              <h5 class="card-title">👤 Tổng Người dùng</h5>
+              <h3 id="totalUsers">0</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4 mb-4">
+        <div class="col-md-4">
+          <div class="card shadow">
+            <div class="card-header bg-light">
+              <h5 class="mb-0">Trạng thái Đơn hàng</h5>
+            </div>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item d-flex justify-content-between">
+                <span>Đang chờ xử lý (Pending)</span>
+                <span class="badge bg-secondary" id="countPending">0</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between">
+                <span>Đã giao hàng (Delivered)</span>
+                <span class="badge bg-success" id="countDelivered">0</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between">
+                <span>Đã hủy (Cancelled)</span>
+                <span class="badge bg-danger" id="countCancelled">0</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between">
+                <span>Đang vận chuyển (Shipping)</span>
+                <span class="badge bg-primary" id="countShipping">0</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="col-md-8">
+          <div class="card shadow h-100">
+            <div class="card-header bg-light">
+              <h5 class="mb-0">Phân phối Trạng thái Đơn hàng</h5>
+            </div>
+            <div
+              class="card-body d-flex justify-content-center align-items-center"
+            >
+              <div style="max-width: 500px">
+                <canvas id="orderStatusChart"></canvas>
+              </div>
             </div>
           </div>
         </div>
@@ -53,27 +107,92 @@
 
       async function loadStats() {
         try {
-          const [products, ordersData] = await Promise.all([
+          // Lấy dữ liệu từ 3 API: Sản phẩm, Đơn hàng, Người dùng
+          const [products, ordersData, users] = await Promise.all([
             GET("/products"),
-            GET("/orders"),
+            GET("/orders"), // API trả về { orders: [], pagination: {} }
+            GET("/users"), // Giả định API GET /users đã có
           ]);
-          const orders = Array.isArray(ordersData)
-            ? ordersData
-            : ordersData?.orders || [];
-          document.getElementById("totalProducts").textContent =
-            products.length || 0;
-          document.getElementById("totalOrders").textContent = orders.length;
+
+          const orders = ordersData?.orders || [];
+          const usersCount = users.length || 0;
+
+          // 1. Tính toán Doanh thu và Đơn hàng
           const revenue = orders.reduce(
             (sum, o) => sum + (o.finalAmount || 0),
             0
           );
           document.getElementById("totalRevenue").textContent =
             revenue.toLocaleString() + "đ";
+          document.getElementById("totalOrders").textContent = orders.length;
+          document.getElementById("totalProducts").textContent =
+            products.length;
+          document.getElementById("totalUsers").textContent = usersCount;
+
+          // 2. Phân loại Trạng thái Đơn hàng
+          const statusCounts = orders.reduce((acc, order) => {
+            const status = order.status || "Unknown";
+            acc[status] = (acc[status] || 0) + 1;
+            return acc;
+          }, {});
+
+          document.getElementById("countPending").textContent =
+            statusCounts.Pending || 0;
+          document.getElementById("countDelivered").textContent =
+            statusCounts.Delivered || 0;
+          document.getElementById("countCancelled").textContent =
+            statusCounts.Cancelled || 0;
+          document.getElementById("countShipping").textContent =
+            statusCounts.Shipping || 0;
+
+          // 3. Vẽ Biểu đồ
+          renderOrderStatusChart(statusCounts);
         } catch (err) {
-          alert("Lỗi: " + err.message);
+          alert("Lỗi tải thống kê: " + err.message);
         }
       }
-      loadStats();
+
+      function renderOrderStatusChart(counts) {
+        const ctx = document.getElementById("orderStatusChart");
+
+        new Chart(ctx, {
+          type: "doughnut", // Biểu đồ hình tròn
+          data: {
+            labels: ["Đã giao", "Đang chờ", "Đang vận chuyển", "Đã hủy"],
+            datasets: [
+              {
+                label: "Số lượng đơn hàng",
+                data: [
+                  counts.Delivered || 0,
+                  counts.Pending || 0,
+                  counts.Shipping || 0,
+                  counts.Cancelled || 0,
+                ],
+                backgroundColor: [
+                  "#198754", // success
+                  "#6c757d", // secondary
+                  "#0d6efd", // primary
+                  "#dc3545", // danger
+                ],
+                hoverOffset: 4,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                position: "top",
+              },
+              title: {
+                display: false,
+              },
+            },
+          },
+        });
+      }
+
+      document.addEventListener("DOMContentLoaded", loadStats);
     </script>
   </body>
 </html>

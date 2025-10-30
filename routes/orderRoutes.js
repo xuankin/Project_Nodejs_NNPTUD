@@ -5,6 +5,7 @@ const router = express.Router();
 const Order = require("../schemas/order");
 const Cart = require("../schemas/cart");
 const Inventory = require("../schemas/inventory");
+const Payment = require("../schemas/payment");
 const Coupon = require("../schemas/coupon");
 const { Authentication, Authorization } = require("../utils/authMiddleware");
 const {
@@ -195,7 +196,27 @@ router.put(
       const order = await Order.findById(req.params.id);
       if (!order) return Response(res, 404, false, "Không tìm thấy");
 
-      // Giả định order.updateStatus là một method có sẵn
+      // 🎯 LOGIC XÁC NHẬN COD
+      if (order.paymentMethod === "COD" && status === "Delivered") {
+        // Kiểm tra xem giao dịch đã tồn tại chưa (tránh tạo trùng lặp)
+        const existingPayment = await Payment.findOne({
+          order: order._id,
+          status: "Success",
+        });
+
+        if (!existingPayment) {
+          // Tạo bản ghi giao dịch thành công (thanh toán tiền mặt)
+          const payment = new Payment({
+            order: order._id, // Giả định Schema Payment có trường order (ref Order)
+            method: "COD",
+            transactionId: `COD-${order._id}-${Date.now()}`,
+            amount: order.finalAmount,
+            status: "Success",
+          });
+          await payment.save();
+        }
+      }
+
       await order.updateStatus(status, reason);
       Response(res, 200, true, order, "Cập nhật thành công");
     } catch (err) {
@@ -203,7 +224,6 @@ router.put(
     }
   }
 );
-
 // POST /orders/:id/cancel - USER (HOÀN KHO)
 router.post(
   "/:id/cancel",

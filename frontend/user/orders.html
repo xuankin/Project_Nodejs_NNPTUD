@@ -48,18 +48,27 @@
             data.orders
               .map(
                 (o) => `
-            <tr>
-              <td>${o._id}</td>
-              <td>${o.finalAmount.toLocaleString()}đ</td>
-              <td><span class="badge bg-${
-                o.status === "Delivered" ? "success" : "warning"
-              }">${o.status}</span></td>
-              <td>${new Date(o.createdAt).toLocaleDateString()}</td>
-              <td><button class="btn btn-sm btn-danger" onclick="cancelOrder('${
-                o._id
-              }')">Hủy</button></td>
-            </tr>
-          `
+          <tr>
+            <td>${o._id}</td>
+            <td>${o.finalAmount.toLocaleString()}đ</td>
+            <td><span class="badge bg-${
+              o.status === "Delivered" ? "success" : "warning"
+            }">${o.status}</span></td>
+            <td>${new Date(o.createdAt).toLocaleDateString()}</td>
+            <td>
+              ${
+                o.status === "Pending" && o.paymentMethod !== "COD"
+                  ? `<a href="/user/payment.html?orderId=${o._id}" class="btn btn-sm btn-info me-2">Thanh toán</a>` // Nút Thanh toán
+                  : ""
+              }
+              ${
+                o.status === "Pending" || o.status === "Confirmed"
+                  ? `<button class="btn btn-sm btn-danger" onclick="cancelOrder('${o._id}')">Hủy</button>` // Nút Hủy
+                  : ""
+              }
+            </td>
+          </tr>
+        `
               )
               .join("") ||
             "<tr><td colspan='5' class='text-center'>Chưa có đơn hàng</td></tr>";
@@ -67,7 +76,6 @@
           alert("Lỗi tải đơn hàng: " + err.message);
         }
       }
-
       // Thay thế hàm cancelOrder(id) trong orders.html
 
       async function cancelOrder(id) {

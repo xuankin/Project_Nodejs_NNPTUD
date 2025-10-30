@@ -19,6 +19,7 @@
         class="btn btn-success mb-3"
         data-bs-toggle="modal"
         data-bs-target="#couponModal"
+        onclick="resetCouponForm()"
       >
         Thêm coupon
       </button>
@@ -69,7 +70,7 @@
                 type="number"
                 class="form-control mb-2"
                 id="maxDiscount"
-                placeholder="Tối đa"
+                placeholder="Giảm tối đa (Bỏ trống nếu không có)"
               />
               <input
                 type="number"
@@ -78,6 +79,7 @@
                 placeholder="Min đơn"
                 required
               />
+              <label for="validTo" class="form-label">Ngày hết hạn</label>
               <input
                 type="date"
                 class="form-control mb-2"
@@ -96,6 +98,17 @@
     <script src="../assets/js/api.js"></script>
     <script src="../assets/js/auth.js"></script>
     <script>
+      if (getRole() !== "ADMIN") {
+        alert("Bạn không có quyền!");
+        window.location.href = "/";
+      }
+
+      function resetCouponForm() {
+        document.getElementById("couponForm").reset();
+        document.getElementById("couponId").value = "";
+        document.getElementById("modalTitle").textContent = "Thêm coupon";
+      }
+
       async function loadCoupons() {
         const coupons = await GET("/coupons");
         document.getElementById("couponTable").innerHTML = coupons
@@ -104,9 +117,9 @@
         <tr>
           <td>${c.code}</td>
           <td>${c.discountType}</td>
-          <td>${c.discountValue}</td>
-          <td>${c.maxDiscount || ""}</td>
-          <td>${c.minAmount}</td>
+          <td>${c.discountValue}${c.discountType === "percent" ? "%" : "đ"}</td>
+          <td>${c.maxDiscount || "—"}</td>
+          <td>${c.minAmount.toLocaleString()}đ</td>
           <td>${new Date(c.validTo).toLocaleDateString()}</td>
           <td>
             <button class="btn btn-sm btn-warning" onclick="editCoupon('${
@@ -128,43 +141,50 @@
         document.getElementById("code").value = c.code;
         document.getElementById("discountType").value = c.discountType;
         document.getElementById("discountValue").value = c.discountValue;
-        document.getElementById("maxDiscount").value = c.maxDiscount;
+        document.getElementById("maxDiscount").value = c.maxDiscount || ""; // Để trống nếu null
         document.getElementById("minAmount").value = c.minAmount;
         document.getElementById("validTo").value = new Date(c.validTo)
           .toISOString()
-          .split("T")[0];
+          .split("T")[0]; // Định dạng YYYY-MM-DD
+        document.getElementById("modalTitle").textContent = "Sửa coupon";
         new bootstrap.Modal(document.getElementById("couponModal")).show();
       }
 
       async function saveCoupon() {
         const id = document.getElementById("couponId").value;
+        const maxDiscountValue = document.getElementById("maxDiscount").value;
+
         const body = {
-          code: document.getElementById("code").value,
+          code: document.getElementById("code").value.toUpperCase(), // Gửi uppercase
           discountType: document.getElementById("discountType").value,
           discountValue: parseFloat(
             document.getElementById("discountValue").value
           ),
-          maxDiscount: parseFloat(document.getElementById("maxDiscount").value),
+          // 🎯 Xử lý maxDiscount: Gửi null nếu trống
+          maxDiscount: maxDiscountValue ? parseFloat(maxDiscountValue) : null,
           minAmount: parseFloat(document.getElementById("minAmount").value),
           validTo: document.getElementById("validTo").value,
         };
 
-        if (id) await PUT(`/coupons/${id}`, body);
-        else await POST("/coupons", body);
-        bootstrap.Modal.getInstance(
-          document.getElementById("couponModal")
-        ).hide();
-        loadCoupons();
+        try {
+          id ? await PUT(`/coupons/${id}`, body) : await POST("/coupons", body);
+          bootstrap.Modal.getInstance(
+            document.getElementById("couponModal")
+          ).hide();
+          loadCoupons();
+        } catch (err) {
+          alert("Lỗi lưu coupon: " + err.message);
+        }
       }
 
       async function deleteCoupon(id) {
-        if (confirm("Xóa?")) {
+        if (confirm("Xóa mã giảm giá? (Xóa mềm)")) {
           await DEL(`/coupons/${id}`);
           loadCoupons();
         }
       }
 
-      loadCoupons();
+      document.addEventListener("DOMContentLoaded", loadCoupons);
     </script>
   </body>
 </html>

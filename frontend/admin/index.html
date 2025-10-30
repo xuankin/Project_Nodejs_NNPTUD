@@ -8,11 +8,12 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="../assets/css/style.css" />
   </head>
   <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
       <div class="container">
-        <a class="navbar-brand" href="#">Admin Panel</a>
+        <a class="navbar-brand" href="/admin/dashboard.html">Admin Panel</a>
         <div id="navbar"></div>
       </div>
     </nav>
@@ -21,18 +22,60 @@
       <div class="row">
         <div class="col-md-3">
           <div class="list-group">
-            <a href="products.html" class="list-group-item">Sản phẩm</a>
-            <a href="orders.html" class="list-group-item">Đơn hàng</a>
-            <a href="users.html" class="list-group-item">Người dùng</a>
-            <a href="coupons.html" class="list-group-item">Mã giảm giá</a>
+            <a
+              href="dashboard.html"
+              class="list-group-item list-group-item-action active"
+              >Dashboard</a
+            >
+            <a
+              href="products.html"
+              class="list-group-item list-group-item-action"
+              >Sản phẩm</a
+            >
+            <a href="orders.html" class="list-group-item list-group-item-action"
+              >Đơn hàng</a
+            >
+            <a href="users.html" class="list-group-item list-group-item-action"
+              >Người dùng</a
+            >
+            <a
+              href="coupons.html"
+              class="list-group-item list-group-item-action"
+              >Mã giảm giá</a
+            >
+            <a
+              href="categories.html"
+              class="list-group-item list-group-item-action"
+              >Danh mục</a
+            >
+            <a
+              href="inventory.html"
+              class="list-group-item list-group-item-action"
+              >Quản lý Kho</a
+            >
+            <a
+              href="notifications.html"
+              class="list-group-item list-group-item-action"
+              >Thông báo</a
+            >
+            <a href="roles.html" class="list-group-item list-group-item-action"
+              >Roles</a
+            >
           </div>
         </div>
         <div class="col-md-9">
           <div class="card">
             <div class="card-body">
-              <h4>Thống kê</h4>
-              <p>Tổng sản phẩm: <span id="totalProducts">0</span></p>
-              <p>Tổng đơn hàng: <span id="totalOrders">0</span></p>
+              <h4 class="text-primary">
+                Chào mừng đến với Bảng điều khiển Admin
+              </h4>
+              <p>
+                Sử dụng menu bên trái để quản lý Sản phẩm, Đơn hàng, Người dùng
+                và các cài đặt hệ thống.
+              </p>
+              <a href="dashboard.html" class="btn btn-primary mt-3"
+                >Xem Thống kê chi tiết</a
+              >
             </div>
           </div>
         </div>
@@ -42,20 +85,14 @@
     <script src="../assets/js/api.js"></script>
     <script src="../assets/js/auth.js"></script>
     <script>
+      // 🎯 KIỂM TRA QUYỀN TRUY CẬP (Rất quan trọng cho trang Admin)
       if (getRole() !== "ADMIN") {
-        alert("Bạn không có quyền!");
+        alert("Bạn không có quyền truy cập trang quản trị!");
         window.location.href = "/";
       }
 
-      async function loadStats() {
-        const [products, orders] = await Promise.all([
-          GET("/products"),
-          GET("/orders"),
-        ]);
-        document.getElementById("totalProducts").textContent = products.length;
-        document.getElementById("totalOrders").textContent = orders.length;
-      }
-      loadStats();
+      // Không cần loadStats() ở đây vì dashboard.html đã xử lý
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   </body>
 </html>

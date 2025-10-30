@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Quản lý Giao dịch - Admin</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../assets/css/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark" id="navbar"></nav>
+    <div class="container my-5">
+      <h2>Quản lý Giao dịch Thanh toán</h2>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID Giao dịch</th>
+            <th>Mã đơn hàng</th>
+            <th>Phương thức</th>
+            <th>Số tiền</th>
+            <th>Trạng thái</th>
+            <th>Ngày tạo</th>
+          </tr>
+        </thead>
+        <tbody id="paymentTable"></tbody>
+      </table>
+    </div>
+
+    <script src="../assets/js/api.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script>
+      if (getRole() !== "ADMIN") {
+        alert("Bạn không có quyền!");
+        window.location.href = "/";
+      }
+
+      async function loadPayments() {
+        try {
+          // Cần sửa backend paymentRoutes.js để populate 'order'
+          const payments = await GET("/payments");
+          const tbody = document.getElementById("paymentTable");
+
+          if (!payments || payments.length === 0) {
+            tbody.innerHTML =
+              '<tr><td colspan="6" class="text-center py-4">Chưa có giao dịch nào.</td></tr>';
+            return;
+          }
+
+          tbody.innerHTML = payments
+            .map(
+              (p) => `
+                <tr class="${
+                  p.status === "Success"
+                    ? "table-success"
+                    : p.status === "Failed"
+                    ? "table-danger"
+                    : ""
+                }">
+                  <td>${p._id}</td>
+                  <td><a href="/admin/orders.html?id=${p.order?._id}">${
+                p.order?._id || "—"
+              }</a></td>
+                  <td>${p.method || "—"}</td>
+                  <td>${(p.amount || 0).toLocaleString()}đ</td>
+                  <td>
+                    <span class="badge bg-${
+                      p.status === "Success"
+                        ? "success"
+                        : p.status === "Failed"
+                        ? "danger"
+                        : "warning"
+                    }">
+                      ${p.status}
+                    </span>
+                  </td>
+                  <td>${new Date(p.createdAt).toLocaleString()}</td>
+                </tr>
+              `
+            )
+            .join("");
+        } catch (err) {
+          alert("Lỗi tải giao dịch: " + err.message);
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", loadPayments);
+    </script>
+  </body>
+</html>

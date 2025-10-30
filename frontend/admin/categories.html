@@ -19,6 +19,7 @@
         class="btn btn-success mb-3"
         data-bs-toggle="modal"
         data-bs-target="#categoryModal"
+        onclick="resetCategoryForm()"
       >
         Thêm danh mục
       </button>
@@ -84,6 +85,12 @@
         window.location.href = "/";
       }
 
+      function resetCategoryForm() {
+        document.getElementById("categoryForm").reset();
+        document.getElementById("categoryId").value = "";
+        document.getElementById("modalTitle").textContent = "Thêm danh mục";
+      }
+
       async function loadCategories() {
         const categories = await GET("/categories");
         document.getElementById("categoryTable").innerHTML = categories
@@ -91,7 +98,7 @@
             (c) => `
         <tr>
           <td>${c.name}</td>
-          <td>${c.description}</td>
+          <td>${c.description || "—"}</td>
           <td>${c.parentCategory?.name || "—"}</td>
           <td>
             <button class="btn btn-sm btn-warning" onclick="editCategory('${
@@ -118,9 +125,10 @@
         const c = await GET(`/categories/${id}`);
         document.getElementById("categoryId").value = c._id;
         document.getElementById("name").value = c.name;
-        document.getElementById("description").value = c.description;
+        document.getElementById("description").value = c.description || "";
         document.getElementById("parentCategory").value =
           c.parentCategory?._id || "";
+        document.getElementById("modalTitle").textContent = "Sửa danh mục";
         new bootstrap.Modal(document.getElementById("categoryModal")).show();
       }
 
@@ -131,12 +139,14 @@
           description: document.getElementById("description").value,
           parentCategory:
             document.getElementById("parentCategory").value || null,
+          imageURL: null, // Khởi tạo
         };
 
         const file = document.getElementById("imageURL").files[0];
-        if (file) {
+        if (file && typeof UPLOAD_SINGLE === "function") {
           const formData = new FormData();
           formData.append("file", file);
+          // 🎯 Giả định UPLOAD_SINGLE trả về { path: 'url' }
           const res = await UPLOAD_SINGLE(formData);
           body.imageURL = res.path;
         }
@@ -155,13 +165,13 @@
       }
 
       async function deleteCategory(id) {
-        if (confirm("Xóa danh mục?")) {
+        if (confirm("Xóa danh mục? (Xóa mềm)")) {
           await DEL(`/categories/${id}`);
           loadCategories();
         }
       }
 
-      loadCategories();
+      document.addEventListener("DOMContentLoaded", loadCategories);
     </script>
   </body>
 </html>

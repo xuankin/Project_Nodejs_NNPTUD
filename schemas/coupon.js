@@ -27,7 +27,6 @@ let couponSchema = new mongoose.Schema(
     },
 
     // Giảm tối đa (chỉ áp dụng cho discountType = "percent")
-    // Ví dụ: giảm 20% nhưng tối đa 100k
     maxDiscount: {
       type: Number,
       min: 0,
@@ -76,7 +75,6 @@ let couponSchema = new mongoose.Schema(
 );
 
 // Index để query nhanh
-
 couponSchema.index({ isActive: 1, validTo: 1 });
 
 // Method kiểm tra coupon còn hiệu lực không
@@ -115,6 +113,12 @@ couponSchema.methods.calculateDiscount = function (totalAmount) {
 
   // Đảm bảo không giảm quá tổng tiền
   return Math.min(discount, totalAmount);
+};
+
+// 🎯 BỔ SUNG: Method tăng số lần sử dụng
+couponSchema.methods.incrementUsedCount = async function () {
+  this.usedCount += 1;
+  await this.save();
 };
 
 couponSchema.plugin(softDelete);

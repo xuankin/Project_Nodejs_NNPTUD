@@ -1,4 +1,5 @@
 // assets/js/auth.js
+
 function setAuth(token, userData) {
   localStorage.setItem("token", token);
   localStorage.setItem("user", JSON.stringify(userData));
@@ -39,43 +40,63 @@ function updateNavbar() {
   const isAdmin = getRole() === "ADMIN";
   const isUser = isLoggedIn();
 
+  const isAdminPage = location.pathname.includes("/admin/");
+
+  const navbarClasses = isAdminPage
+    ? "navbar navbar-expand-lg navbar-dark bg-dark"
+    : "navbar navbar-expand-lg navbar-dark bg-primary";
+
+  navbar.className = navbarClasses;
+
+  // Định nghĩa các liên kết Admin (BỔ SUNG payments)
+  const adminLinks = [
+    { href: "/admin/dashboard.html", text: "Dashboard" },
+    { href: "/admin/products.html", text: "Sản phẩm" },
+    { href: "/admin/orders.html", text: "Đơn hàng" },
+    { href: "/admin/users.html", text: "Người dùng" },
+    { href: "/admin/coupons.html", text: "Mã giảm giá" },
+    { href: "/admin/inventory.html", text: "Kho" },
+    { href: "/admin/notifications.html", text: "Thông báo" },
+    { href: "/admin/roles.html", text: "Roles" },
+    // 🎯 THÊM: Liên kết Quản lý Giao dịch
+    { href: "/admin/payments.html", text: "Giao dịch" },
+  ];
+
+  const adminNavItems = adminLinks
+    .map(
+      (link) =>
+        `<li class="nav-item">
+        <a class="nav-link text-white" href="${link.href}">${link.text}</a>
+    </li>`
+    )
+    .join("");
+
   navbar.innerHTML = `
     <div class="container-fluid">
-      <a class="navbar-brand text-white fw-bold" href="/index.html">PhoneShop</a>
+      <a class="navbar-brand text-white fw-bold" href="${
+        isAdminPage ? "/admin/dashboard.html" : "/index.html"
+      }">PhoneShop</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav me-auto">
           <li class="nav-item"><a class="nav-link text-white" href="/index.html">Trang chủ</a></li>
+          
           ${
-            isUser
+            !isAdminPage && isUser
               ? `
             <li class="nav-item"><a class="nav-link text-white" href="/user/cart.html">Giỏ hàng</a></li>
             <li class="nav-item"><a class="nav-link text-white" href="/user/wishlist.html">Yêu thích</a></li>
             <li class="nav-item"><a class="nav-link text-white" href="/user/orders.html">Đơn hàng</a></li>
             <li class="nav-item"><a class="nav-link text-white" href="/user/notifications.html">Thông báo</a></li>
+            <li class="nav-item"><a class="nav-link text-white" href="/user/profile.html">Profile</a></li> 
+            <li class="nav-item"><a class="nav-link text-white" href="/user/reviews.html">Đánh giá của tôi</a></li> 
           `
               : ""
           }
-          ${
-            isAdmin
-              ? `
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle text-white" href="#" data-bs-toggle="dropdown">Quản trị</a>
-              <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="/admin/products.html">Sản phẩm</a></li>
-                <li><a class="dropdown-item" href="/admin/categories.html">Danh mục</a></li>
-                <li><a class="dropdown-item" href="/admin/users.html">Người dùng</a></li>
-                <li><a class="dropdown-item" href="/admin/orders.html">Đơn hàng</a></li>
-                <li><a class="dropdown-item" href="/admin/coupons.html">Mã giảm giá</a></li>
-                <li><a class="dropdown-item" href="/admin/inventory.html">Kho</a></li>
-                <li><a class="dropdown-item" href="/admin/notifications.html">Thông báo</a></li>
-              </ul>
-            </li>
-          `
-              : ""
-          }
+          
+          ${isAdminPage && isAdmin ? adminNavItems : ""}
         </ul>
         <ul class="navbar-nav ms-auto align-items-center">
           ${
@@ -94,7 +115,6 @@ function updateNavbar() {
     </div>
   `;
 }
-
 document.addEventListener("DOMContentLoaded", () => {
   updateNavbar();
   const userPages = ["/user/"];

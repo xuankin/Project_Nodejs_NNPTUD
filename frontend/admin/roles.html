@@ -68,6 +68,12 @@
     <script src="../assets/js/api.js"></script>
     <script src="../assets/js/auth.js"></script>
     <script>
+      // 🎯 THÊM KIỂM TRA QUYỀN
+      if (getRole() !== "ADMIN") {
+        alert("Bạn không có quyền!");
+        window.location.href = "/";
+      }
+
       async function loadRoles() {
         const roles = await GET("/roles");
         document.getElementById("roleTable").innerHTML = roles

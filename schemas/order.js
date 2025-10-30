@@ -6,7 +6,6 @@ const orderSchema = new mongoose.Schema(
     // Người dùng đặt hàng
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      // 🎯 SỬA: Dùng tên model viết thường (user)
       ref: "user",
       required: true,
     },
@@ -16,7 +15,6 @@ const orderSchema = new mongoose.Schema(
       {
         product: {
           type: mongoose.Schema.Types.ObjectId,
-          // 🎯 SỬA: Dùng tên model viết thường (product)
           ref: "product",
           required: true,
         },
@@ -37,7 +35,6 @@ const orderSchema = new mongoose.Schema(
     // Mã giảm giá áp dụng (nếu có)
     coupon: {
       type: mongoose.Schema.Types.ObjectId,
-      // 🎯 SỬA: Dùng tên model viết thường (coupon)
       ref: "coupon",
       default: null,
     },
@@ -48,6 +45,18 @@ const orderSchema = new mongoose.Schema(
       enum: ["Pending", "Confirmed", "Shipping", "Delivered", "Cancelled"],
       default: "Pending",
     },
+
+    // 🎯 BỔ SUNG: Lịch sử thay đổi trạng thái
+    statusHistory: [
+      {
+        status: {
+          type: String,
+          enum: ["Pending", "Confirmed", "Shipping", "Delivered", "Cancelled"],
+        },
+        reason: String,
+        date: { type: Date, default: Date.now },
+      },
+    ],
 
     // Phương thức thanh toán
     paymentMethod: {
@@ -64,8 +73,22 @@ const orderSchema = new mongoose.Schema(
   }
 );
 
+// 🎯 BỔ SUNG: Định nghĩa phương thức instance (Method) updateStatus
+orderSchema.methods.updateStatus = async function (newStatus, reason = null) {
+  // 1. Cập nhật trạng thái hiện tại
+  this.status = newStatus;
+
+  // 2. Lưu lịch sử trạng thái
+  this.statusHistory.push({
+    status: newStatus,
+    reason: reason,
+  });
+
+  // 3. Lưu tài liệu
+  await this.save();
+};
+
 orderSchema.plugin(softDelete);
 orderSchema.index({ user: 1, status: 1, createdAt: -1 });
 
-// 🎯 SỬA: Export tên model thành "order" (chữ thường) để thống nhất
 module.exports = mongoose.model("order", orderSchema);

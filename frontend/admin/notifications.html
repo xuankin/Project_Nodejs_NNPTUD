@@ -1,9 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Quản lý Thông báo - Admin</title>
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet"
@@ -38,9 +35,9 @@
             <div class="mb-3">
               <label for="type" class="form-label">Loại thông báo</label>
               <select class="form-select" id="type" required>
-                <option value="System">Hệ thống (System)</option>
-                <option value="Order">Đơn hàng (Order)</option>
-                <option value="Promotion">Khuyến mãi (Promotion)</option>
+                <option value="SYSTEM">Hệ thống (SYSTEM)</option>
+                <option value="ORDER">Đơn hàng (ORDER)</option>
+                <option value="PROMOTION">Khuyến mãi (PROMOTION)</option>
               </select>
             </div>
 
@@ -95,7 +92,6 @@
 
         try {
           const body = { message, type, recipientId };
-          // Endpoint: POST /notifications
           await POST("/notifications", body);
 
           alert(

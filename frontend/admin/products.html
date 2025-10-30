@@ -96,6 +96,9 @@
         window.location.href = "/";
       }
 
+      // Giả định hàm UPLOAD_SINGLE có sẵn từ file JS khác
+      // Chú ý: Bạn cần đảm bảo hàm UPLOAD_SINGLE đã được định nghĩa và import.
+
       async function loadProducts() {
         const products = await GET("/products");
         const categories = await GET("/categories");
@@ -145,17 +148,28 @@
           price: parseFloat(document.getElementById("price").value),
           stock: parseInt(document.getElementById("stock").value),
           category: document.getElementById("category").value,
-          images: [],
+          images: [], // Khởi tạo mảng ảnh
         };
 
-        const files = document.getElementById("images").files;
-        for (let file of files) {
-          const formData = new FormData();
-          formData.append("file", file);
-          const res = await UPLOAD_SINGLE(formData);
-          body.images.push(res.path);
+        // 1. Nếu là UPDATE, giữ lại ảnh cũ
+        if (id) {
+          const existingProduct = await GET(`/products/${id}`);
+          body.images = existingProduct.images || [];
         }
 
+        // 2. Upload và thêm ảnh mới
+        const files = document.getElementById("images").files;
+        if (files.length > 0 && typeof UPLOAD_SINGLE === "function") {
+          for (let file of files) {
+            const formData = new FormData();
+            formData.append("file", file);
+            // 🎯 Giả định UPLOAD_SINGLE được định nghĩa trong file khác
+            const res = await UPLOAD_SINGLE(formData);
+            body.images.push(res.path);
+          }
+        }
+
+        // 3. Thực hiện PUT hoặc POST
         try {
           id
             ? await PUT(`/products/${id}`, body)

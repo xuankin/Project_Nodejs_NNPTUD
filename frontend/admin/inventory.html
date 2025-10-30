@@ -20,8 +20,9 @@
           <tr>
             <th>Sản phẩm</th>
             <th>Tồn kho</th>
-            <th>Nhập</th>
-            <th>Xuất</th>
+            <th>Số lượng Nhập</th>
+            <th>Số lượng Xuất</th>
+            <th>Hành động</th>
           </tr>
         </thead>
         <tbody id="inventoryTable"></tbody>
@@ -38,21 +39,25 @@
 
       async function loadInventory() {
         try {
-          const inventories = await GET("/inventories"); // API trả từ inventoryRoutes.js
+          const inventories = await GET("/inventories");
           document.getElementById("inventoryTable").innerHTML = inventories
             .map(
               (i) => `
           <tr>
-            <td>${i.product.name}</td>
+            <td>${i.product?.name || "—"}</td>
             <td><strong>${i.currentStock}</strong></td>
+            <td>${i.quantityIn}</td>
+            <td>${i.quantityOut}</td>
             <td>
-              <button class="btn btn-sm btn-success" onclick="addStock('${i.product._id}')">
-                Nhập
+              <button class="btn btn-sm btn-success" onclick="addStock('${
+                i.product._id
+              }')">
+                Nhập kho
               </button>
-            </td>
-            <td>
-              <button class="btn btn-sm btn-warning" onclick="removeStock('${i.product._id}')">
-                Xuất
+              <button class="btn btn-sm btn-warning" onclick="removeStock('${
+                i.product._id
+              }')">
+                Xuất kho
               </button>
             </td>
           </tr>
@@ -66,19 +71,25 @@
 
       async function addStock(productId) {
         const qty = prompt("Nhập số lượng nhập kho:");
-        if (!qty || qty <= 0) return alert("Số lượng không hợp lệ");
-        await PUT(`/inventories/${productId}`, { quantityIn: parseInt(qty) });
+        const parsedQty = parseInt(qty);
+        if (isNaN(parsedQty) || parsedQty <= 0)
+          return alert("Số lượng không hợp lệ");
+        // API PUT /inventories/:productId xử lý quantityIn
+        await PUT(`/inventories/${productId}`, { quantityIn: parsedQty });
         loadInventory();
       }
 
       async function removeStock(productId) {
         const qty = prompt("Nhập số lượng xuất kho:");
-        if (!qty || qty <= 0) return alert("Số lượng không hợp lệ");
-        await PUT(`/inventories/${productId}`, { quantityOut: parseInt(qty) });
+        const parsedQty = parseInt(qty);
+        if (isNaN(parsedQty) || parsedQty <= 0)
+          return alert("Số lượng không hợp lệ");
+        // API PUT /inventories/:productId xử lý quantityOut
+        await PUT(`/inventories/${productId}`, { quantityOut: parsedQty });
         loadInventory();
       }
 
-      loadInventory();
+      document.addEventListener("DOMContentLoaded", loadInventory);
     </script>
   </body>
 </html>

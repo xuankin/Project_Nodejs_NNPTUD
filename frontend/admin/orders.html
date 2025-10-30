@@ -39,8 +39,10 @@
       }
 
       async function loadOrders() {
+        // API GET /orders trả về object { orders: [], pagination: {} }
         const data = await GET("/orders");
         const orders = Array.isArray(data) ? data : data.orders || [];
+
         document.getElementById("orderTable").innerHTML = orders
           .map(
             (o) => `
@@ -55,7 +57,9 @@
               ${["Pending", "Confirmed", "Shipping", "Delivered", "Cancelled"]
                 .map(
                   (s) =>
-                    `<option ${o.status === s ? "selected" : ""}>${s}</option>`
+                    `<option value="${s}" ${
+                      o.status === s ? "selected" : ""
+                    }>${s}</option>`
                 )
                 .join("")}
             </select>
@@ -73,18 +77,31 @@
       }
 
       async function updateOrderStatus(id, status) {
-        await PUT(`/orders/${id}/status`, { status });
-        alert("Cập nhật thành công!");
-      }
-
-      async function cancelOrder(id) {
-        if (confirm("Hủy đơn?")) {
-          await POST(`/orders/${id}/cancel`, { reason: "Admin hủy" });
-          loadOrders();
+        try {
+          // Endpoint: PUT /orders/:id/status
+          await PUT(`/orders/${id}/status`, { status });
+          alert("Cập nhật trạng thái thành công!");
+        } catch (err) {
+          alert("Lỗi cập nhật: " + err.message);
         }
       }
 
-      loadOrders();
+      async function cancelOrder(id) {
+        if (
+          confirm("Hủy đơn hàng này? Việc này sẽ hoàn lại sản phẩm vào kho.")
+        ) {
+          try {
+            // Endpoint: POST /orders/:id/cancel
+            await POST(`/orders/${id}/cancel`, { reason: "Admin hủy" });
+            alert("Hủy đơn thành công và hoàn kho!");
+            loadOrders();
+          } catch (err) {
+            alert("Lỗi hủy đơn: " + err.message);
+          }
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", loadOrders);
     </script>
   </body>
 </html>

@@ -19,6 +19,7 @@
         class="btn btn-success mb-3"
         data-bs-toggle="modal"
         data-bs-target="#userModal"
+        onclick="resetUserForm()"
       >
         Thêm người dùng
       </button>
@@ -70,8 +71,7 @@
                 type="password"
                 class="form-control mb-2"
                 id="password"
-                placeholder="Mật khẩu"
-                required
+                placeholder="Mật khẩu (Bỏ trống nếu không đổi)"
               />
               <select class="form-control" id="role"></select>
             </form>
@@ -86,21 +86,38 @@
     <script src="../assets/js/api.js"></script>
     <script src="../assets/js/auth.js"></script>
     <script>
+      if (getRole() !== "ADMIN") {
+        alert("Bạn không có quyền!");
+        window.location.href = "/";
+      }
+
+      function resetUserForm() {
+        document.getElementById("userForm").reset();
+        document.getElementById("userId").value = "";
+        document.getElementById("modalTitle").textContent = "Thêm người dùng";
+        document.getElementById("password").required = true;
+      }
+
       async function loadUsers() {
-        const users = await GET("/users");
+        const users = await GET("/users"); // Giả định API GET /users trả về cả isActive/isDeleted
         const roles = await GET("/roles");
         document.getElementById("userTable").innerHTML = users
           .map(
             (u) => `
-        <tr>
+        <tr class="${u.isDeleted ? "text-muted" : ""}">
           <td>${u._id}</td>
           <td>${u.fullName}</td>
           <td>${u.email}</td>
-          <td>${u.role.name}</td>
+          <td>${u.role?.name || "—"}</td>
           <td>
-            <button class="btn btn-sm btn-warning" onclick="editUser('${u._id}')">Sửa</button>
-            <button class="btn btn-sm btn-danger" onclick="deleteUser('${u._id}')">Xóa</button>
-            <button class="btn btn-sm btn-info" onclick="restoreUser('${u._id}')">Khôi phục</button>
+            <button class="btn btn-sm btn-warning" onclick="editUser('${
+              u._id
+            }')">Sửa</button>
+            ${
+              u.isDeleted
+                ? `<button class="btn btn-sm btn-info" onclick="restoreUser('${u._id}')">Khôi phục</button>`
+                : `<button class="btn btn-sm btn-danger" onclick="deleteUser('${u._id}')">Xóa</button>`
+            }
           </td>
         </tr>
       `
@@ -120,42 +137,53 @@
         document.getElementById("email").value = u.email;
         document.getElementById("fullName").value = u.fullName;
         document.getElementById("role").value = u.role._id;
+        document.getElementById("password").value = "";
+        document.getElementById("password").required = false;
+        document.getElementById("modalTitle").textContent = "Sửa người dùng";
         new bootstrap.Modal(document.getElementById("userModal")).show();
       }
 
       async function saveUser() {
         const id = document.getElementById("userId").value;
+        const passwordValue = document.getElementById("password").value;
         const body = {
           username: document.getElementById("username").value,
           email: document.getElementById("email").value,
           fullName: document.getElementById("fullName").value,
-          password: document.getElementById("password").value,
           role: document.getElementById("role").value,
         };
 
-        if (id) await PUT(`/users/${id}`, body);
-        else await POST("/users", body);
-        bootstrap.Modal.getInstance(
-          document.getElementById("userModal")
-        ).hide();
-        loadUsers();
+        if (passwordValue) {
+          body.password = passwordValue; // Chỉ gửi mật khẩu nếu có nhập
+        }
+
+        try {
+          id ? await PUT(`/users/${id}`, body) : await POST("/users", body);
+          bootstrap.Modal.getInstance(
+            document.getElementById("userModal")
+          ).hide();
+          loadUsers();
+        } catch (err) {
+          alert("Lỗi lưu người dùng: " + err.message);
+        }
       }
 
       async function deleteUser(id) {
-        if (confirm("Xóa?")) {
+        if (confirm("Xóa người dùng? (Xóa mềm)")) {
           await DEL(`/users/${id}`);
           loadUsers();
         }
       }
 
       async function restoreUser(id) {
-        if (confirm("Khôi phục?")) {
+        if (confirm("Khôi phục người dùng?")) {
+          // Giả định backend có route POST /users/restore/:id
           await POST(`/users/restore/${id}`, {});
           loadUsers();
         }
       }
 
-      loadUsers();
+      document.addEventListener("DOMContentLoaded", loadUsers);
     </script>
   </body>
 </html>
