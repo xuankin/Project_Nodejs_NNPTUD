@@ -48,6 +48,7 @@ app.use("/coupons", require("./routes/couponRoutes"));
 app.use("/inventories", require("./routes/inventoryRoutes"));
 app.use("/payments", require("./routes/paymentRoutes"));
 app.use("/reviews", require("./routes/reviewRoutes"));
+
 app.use("/notifications", require("./routes/notificationRoutes"));
 
 // =======================

@@ -3,63 +3,95 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Quản lý Role - Admin</title>
+    <title>Quản lý Roles - Admin</title>
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="../assets/css/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+      .table-responsive {
+        border-radius: 0.5rem;
+      }
+    </style>
   </head>
   <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark" id="navbar"></nav>
     <div class="container my-5">
-      <h2>Quản lý Role</h2>
+      <h2 class="mb-4 text-primary">
+        <i class="fas fa-user-tag me-2"></i> Quản lý Roles & Phân quyền
+      </h2>
       <button
-        class="btn btn-success mb-3"
+        class="btn btn-success mb-3 shadow-sm"
         data-bs-toggle="modal"
         data-bs-target="#roleModal"
+        onclick="resetRoleForm()"
       >
-        Thêm role
+        <i class="fas fa-plus"></i> Thêm Role mới
       </button>
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Tên</th>
-            <th>Quyền</th>
-            <th>Hành động</th>
-          </tr>
-        </thead>
-        <tbody id="roleTable"></tbody>
-      </table>
+      <div class="table-responsive shadow-sm">
+        <table class="table table-striped table-hover align-middle">
+          <thead class="table-dark">
+            <tr>
+              <th>ID</th>
+              <th>Tên Role</th>
+              <th>Số lượng Permissions</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody id="roleTable"></tbody>
+        </table>
+      </div>
     </div>
 
     <div class="modal fade" id="roleModal">
       <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 id="modalTitle">Thêm role</h5>
+        <div class="modal-content rounded-4 shadow-lg">
+          <div class="modal-header bg-primary text-white rounded-top-4">
+            <h5 id="modalTitle">Thêm Role</h5>
+            <button
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+            ></button>
           </div>
           <div class="modal-body">
             <form id="roleForm">
               <input type="hidden" id="roleId" />
-              <input
-                type="text"
-                class="form-control mb-2"
-                id="name"
-                placeholder="Tên role"
-                required
-              />
-              <input
-                type="text"
-                class="form-control mb-2"
-                id="permissions"
-                placeholder="Quyền (cách nhau bởi dấu phẩy)"
-              />
+              <div class="mb-3">
+                <label for="roleName" class="form-label">Tên Role</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="roleName"
+                  placeholder="Ví dụ: SELLER, MANAGER"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label for="permissions" class="form-label"
+                  >Permissions (Phân cách bởi dấu phẩy)</label
+                >
+                <textarea
+                  class="form-control"
+                  id="permissions"
+                  rows="3"
+                  placeholder="Ví dụ: read_product, create_order, delete_review"
+                ></textarea>
+              </div>
             </form>
           </div>
           <div class="modal-footer">
-            <button class="btn btn-primary" onclick="saveRole()">Lưu</button>
+            <button class="btn btn-secondary" data-bs-dismiss="modal">
+              <i class="fas fa-times"></i> Hủy
+            </button>
+            <button class="btn btn-primary" onclick="saveRole()">
+              <i class="fas fa-save"></i> Lưu
+            </button>
           </div>
         </div>
       </div>
@@ -68,27 +100,38 @@
     <script src="../assets/js/api.js"></script>
     <script src="../assets/js/auth.js"></script>
     <script>
-      // 🎯 THÊM KIỂM TRA QUYỀN
       if (getRole() !== "ADMIN") {
         alert("Bạn không có quyền!");
         window.location.href = "/";
       }
 
+      let currentRoles = [];
+
+      function resetRoleForm() {
+        document.getElementById("roleForm").reset();
+        document.getElementById("roleId").value = "";
+        document.getElementById("modalTitle").textContent = "Thêm Role";
+      }
+
       async function loadRoles() {
         const roles = await GET("/roles");
+        currentRoles = roles;
         document.getElementById("roleTable").innerHTML = roles
           .map(
             (r) => `
         <tr>
-          <td>${r.name}</td>
-          <td>${r.permissions.join(", ")}</td>
+          <td>${r._id.substring(0, 8)}...</td>
+          <td class="fw-bold">${r.name}</td>
+          <td><span class="badge bg-info">${
+            r.permissions?.length || 0
+          }</span></td>
           <td>
-            <button class="btn btn-sm btn-warning" onclick="editRole('${
+            <button class="btn btn-sm btn-warning me-2 shadow-sm" onclick="editRole('${
               r._id
-            }')">Sửa</button>
-            <button class="btn btn-sm btn-danger" onclick="deleteRole('${
+            }')"><i class="fas fa-edit"></i> Sửa</button>
+            <button class="btn btn-sm btn-danger shadow-sm" onclick="deleteRole('${
               r._id
-            }')">Xóa</button>
+            }')"><i class="fas fa-trash"></i> Xóa</button>
           </td>
         </tr>
       `
@@ -97,39 +140,54 @@
       }
 
       async function editRole(id) {
-        const r = await GET(`/roles/${id}`);
-        document.getElementById("roleId").value = r._id;
-        document.getElementById("name").value = r.name;
-        document.getElementById("permissions").value = r.permissions.join(", ");
+        const role = currentRoles.find((r) => r._id === id);
+        if (!role) return;
+
+        document.getElementById("roleId").value = role._id;
+        document.getElementById("roleName").value = role.name;
+        document.getElementById("permissions").value =
+          role.permissions.join(", ");
+        document.getElementById("modalTitle").textContent = "Sửa Role";
+
         new bootstrap.Modal(document.getElementById("roleModal")).show();
       }
 
       async function saveRole() {
         const id = document.getElementById("roleId").value;
+
+        const permissionsInput = document.getElementById("permissions").value;
+
         const body = {
-          name: document.getElementById("name").value,
-          permissions: document
-            .getElementById("permissions")
-            .value.split(",")
-            .map((p) => p.trim()),
+          name: document.getElementById("roleName").value,
+          permissions: permissionsInput
+            .split(",")
+            .map((p) => p.trim())
+            .filter((p) => p.length > 0),
         };
 
-        if (id) await PUT(`/roles/${id}`, body);
-        else await POST("/roles", body);
-        bootstrap.Modal.getInstance(
-          document.getElementById("roleModal")
-        ).hide();
-        loadRoles();
+        try {
+          id ? await PUT(`/roles/${id}`, body) : await POST("/roles", body);
+          bootstrap.Modal.getInstance(
+            document.getElementById("roleModal")
+          ).hide();
+          loadRoles();
+        } catch (err) {
+          alert("Lỗi lưu Role: " + err.message);
+        }
       }
 
       async function deleteRole(id) {
-        if (confirm("Xóa?")) {
+        if (
+          confirm(
+            "Xóa mềm Role này? Việc này sẽ thất bại nếu có người dùng đang giữ Role này."
+          )
+        ) {
           await DEL(`/roles/${id}`);
           loadRoles();
         }
       }
 
-      loadRoles();
+      document.addEventListener("DOMContentLoaded", loadRoles);
     </script>
   </body>
 </html>

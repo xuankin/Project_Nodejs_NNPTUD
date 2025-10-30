@@ -13,6 +13,26 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
     />
+    <style>
+      .btn-wishlist.active {
+        background-color: var(--bs-danger);
+        color: white;
+        border-color: var(--bs-danger);
+      }
+      #productImage {
+        height: 450px;
+        object-fit: contain;
+        background-color: white;
+        padding: 15px;
+        border: 1px solid #eee;
+      }
+      .review-card-title {
+        color: var(--bs-primary);
+      }
+      .rating-stars {
+        color: #ffc107;
+      }
+    </style>
   </head>
   <body>
     <nav
@@ -20,64 +40,83 @@
       id="navbar"
     ></nav>
     <div class="container my-5">
-      <div class="row">
-        <div class="col-md-6">
-          <img
-            id="productImage"
-            src=""
-            class="img-fluid rounded shadow"
-            alt="Sản phẩm"
-          />
-        </div>
-        <div class="col-md-6">
-          <h2 id="productName"></h2>
-          <p class="text-danger fs-3 fw-bold" id="productPrice"></p>
-          <p id="productDescription"></p>
-          <p class="text-stock">
-            <strong>Tồn kho:</strong> <span id="productStock"></span>
-          </p>
-
-          <div class="mb-3">
-            <label class="form-label">Số lượng:</label>
-            <input
-              type="number"
-              class="form-control w-25 d-inline-block"
-              id="quantity"
-              value="1"
-              min="1"
+      <div class="card shadow-lg border-0 rounded-3 p-4">
+        <div class="row g-4">
+          <div class="col-md-6">
+            <img
+              id="productImage"
+              src=""
+              class="img-fluid rounded shadow-sm"
+              alt="Sản phẩm"
             />
           </div>
+          <div class="col-md-6">
+            <h2 id="productName" class="text-primary fw-bold mb-3"></h2>
+            <p
+              class="text-danger fs-3 fw-bold border-bottom pb-2"
+              id="productPrice"
+            ></p>
 
-          <div class="mb-3">
-            <button class="btn btn-primary me-2" onclick="addToCart()">
-              Thêm vào giỏ
-            </button>
-            <button class="btn btn-success me-2" onclick="buyNow()">
-              Mua ngay
-            </button>
-            <button
-              class="btn btn-outline-danger btn-wishlist"
-              id="wishlistBtn"
-              onclick="toggleWishlist()"
-            >
-              Yêu thích
-            </button>
+            <div class="mb-3">
+              <span id="productRatingSummary" class="d-block mb-2"></span>
+              <p class="text-muted mb-2">
+                <i class="bi bi-box-seam"></i> <strong>Tồn kho:</strong>
+                <span id="productStock"></span>
+              </p>
+            </div>
+
+            <p id="productDescription" class="text-muted"></p>
+
+            <div class="mb-4 pt-3 border-top">
+              <label class="form-label fw-bold">Số lượng:</label>
+              <input
+                type="number"
+                class="form-control w-25 d-inline-block me-3"
+                id="quantity"
+                value="1"
+                min="1"
+              />
+            </div>
+
+            <div class="mb-3 d-flex gap-3">
+              <button
+                class="btn btn-primary btn-lg shadow-sm"
+                onclick="addToCart()"
+              >
+                <i class="bi bi-cart-plus"></i> Thêm vào giỏ
+              </button>
+              <button
+                class="btn btn-success btn-lg shadow-sm"
+                onclick="buyNow()"
+              >
+                <i class="bi bi-bag-check"></i> Mua ngay
+              </button>
+              <button
+                class="btn btn-outline-danger btn-lg btn-wishlist"
+                id="wishlistBtn"
+                onclick="toggleWishlist()"
+              >
+                <i class="bi bi-heart"></i> Yêu thích
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="mt-5">
-        <h3>Đánh giá sản phẩm</h3>
+      <div class="mt-5 pt-3 border-top">
+        <h3 class="text-primary">
+          <i class="bi bi-chat-dots"></i> Đánh giá sản phẩm
+        </h3>
         <div id="reviewsContainer" class="row"></div>
 
-        <div class="card my-4" id="reviewFormCard">
+        <div class="card my-4 shadow-sm rounded-3" id="reviewFormCard">
           <div class="card-header bg-primary text-white">
             <h5>Thêm đánh giá của bạn</h5>
           </div>
           <div class="card-body">
             <form id="addReviewForm">
               <div class="mb-3">
-                <label for="reviewRating" class="form-label"
+                <label for="reviewRating" class="form-label fw-bold"
                   >Đánh giá sao:</label
                 >
                 <select class="form-select w-auto" id="reviewRating" required>
@@ -89,14 +128,16 @@
                 </select>
               </div>
               <div class="mb-3">
-                <label for="reviewComment" class="form-label">Bình luận:</label>
+                <label for="reviewComment" class="form-label fw-bold"
+                  >Bình luận:</label
+                >
                 <textarea
                   class="form-control"
                   id="reviewComment"
                   rows="3"
                 ></textarea>
               </div>
-              <button type="submit" class="btn btn-success">
+              <button type="submit" class="btn btn-success shadow-sm">
                 Gửi đánh giá
               </button>
             </form>
@@ -112,11 +153,18 @@
       const productId = urlParams.get("id");
       let product;
 
+      function renderStars(rating) {
+        const full = "★".repeat(rating || 0);
+        const empty = "☆".repeat(5 - (rating || 0));
+        return `<span class="rating-stars">${full}${empty}</span>`;
+      }
+
       async function loadProductDetail() {
         if (!productId) return alert("Không có ID sản phẩm!");
         try {
           product = await GET(`/products/${productId}`);
           if (!product) return alert("Sản phẩm không tồn tại");
+
           document.getElementById("productImage").src =
             product.images?.[0] || "/assets/img/no-image.png";
           document.getElementById("productName").textContent =
@@ -130,9 +178,17 @@
             product.stock || 0;
           document.getElementById("quantity").max = product.stock || 1;
 
-          await checkWishlist();
+          // Thêm thông tin đánh giá tổng thể
+          document.getElementById("productRatingSummary").innerHTML = `
+              ${renderStars(Math.round(product.avgRating))} 
+              (${product.reviewCount} đánh giá, ${
+            product.wishlistCount
+          } yêu thích)
+          `;
+
+          await checkWishlist(product.userLiked);
           await loadReviews();
-          setupReviewForm(); // Khởi tạo logic form đánh giá
+          setupReviewForm();
         } catch (err) {
           alert("Lỗi tải sản phẩm: " + err.message);
         }
@@ -140,7 +196,6 @@
 
       async function loadReviews() {
         try {
-          // Endpoint: GET /reviews/:productId
           const reviews = await GET(`/reviews/${productId}`);
           const container = document.getElementById("reviewsContainer");
           container.innerHTML =
@@ -149,13 +204,12 @@
                   .map(
                     (r) => `
               <div class="col-md-6 mb-3">
-                <div class="card">
+                <div class="card shadow-sm">
                   <div class="card-body">
-                    <h6 class="card-title">${
+                    <h6 class="card-title review-card-title">${
                       r.user?.fullName || "Khách"
-                    } - ${"★".repeat(r.rating || 0)}${"☆".repeat(
-                      5 - (r.rating || 0)
-                    )}</h6>
+                    }</h6>
+                    <p class="card-subtitle mb-2">${renderStars(r.rating)}</p>
                     <p class="card-text">${
                       r.comment || "Không có bình luận"
                     }</p>
@@ -174,7 +228,6 @@
         }
       }
 
-      // START: Logic Đánh giá mới
       async function submitReview(e) {
         e.preventDefault();
         if (!isLoggedIn()) return (window.location.href = "/login.html");
@@ -185,12 +238,12 @@
           );
           const comment = document.getElementById("reviewComment").value.trim();
 
-          // Endpoint: POST /reviews
           await POST("/reviews", { product: productId, rating, comment });
 
           alert("Cảm ơn bạn đã đánh giá!");
           document.getElementById("addReviewForm").reset();
           loadReviews();
+          loadProductDetail(); // Tải lại chi tiết để cập nhật Avg Rating
         } catch (err) {
           alert("Lỗi gửi đánh giá: " + (err.message || "Lỗi không xác định"));
         }
@@ -207,7 +260,6 @@
           card.innerHTML = `<div class="card-body text-center text-muted">Vui lòng <a href="/login.html">Đăng nhập</a> để thêm đánh giá.</div>`;
         }
       }
-      // END: Logic Đánh giá mới
 
       async function addToCart() {
         if (!isLoggedIn()) return (window.location.href = "/login.html");
@@ -215,7 +267,6 @@
         if (quantity > (product?.stock || 0))
           return alert("Không đủ hàng trong kho!");
         try {
-          // Endpoint: POST /carts
           await POST("/carts", { product: productId, quantity });
           alert("Thêm vào giỏ thành công!");
         } catch (err) {
@@ -235,37 +286,44 @@
 
         try {
           if (isLiked) {
-            // SỬA LỖI ENDPOINT: DEL /wishlists/:id
             await DEL(`/wishlists/${productId}`);
-            btn.classList.remove("active");
-            btn.innerHTML = "Yêu thích";
           } else {
-            // SỬA LỖI ENDPOINT: POST /wishlists
             await POST("/wishlists", { product: productId });
-            btn.classList.add("active");
-            btn.innerHTML = "Đã yêu thích";
           }
+          checkWishlist(!isLiked); // Cập nhật trạng thái UI ngay lập tức
         } catch (err) {
           alert("Lỗi: " + err.message);
         }
       }
 
-      async function checkWishlist() {
+      async function checkWishlist(isLikedStatusFromProduct = null) {
         if (!isLoggedIn()) return;
-        try {
-          // Endpoint: GET /wishlists/me
-          const wishlist = await GET("/wishlists/me");
-          // Kiểm tra xem sản phẩm có trong danh sách yêu thích không
-          const isLiked = (wishlist?.products || []).some(
-            (p) => p?._id === productId
-          );
-          const btn = document.getElementById("wishlistBtn");
-          if (isLiked) {
-            btn.classList.add("active");
-            btn.innerHTML = "Đã yêu thích";
+        const btn = document.getElementById("wishlistBtn");
+        let isLiked = false;
+
+        if (isLikedStatusFromProduct !== null) {
+          // Sử dụng dữ liệu đã lấy từ API product detail (tối ưu)
+          isLiked = isLikedStatusFromProduct;
+        } else {
+          // Phải gọi API riêng (dự phòng)
+          try {
+            const wishlist = await GET("/wishlists/me");
+            isLiked = (wishlist?.products || []).some(
+              (p) =>
+                p?._id === productId ||
+                (p && p._id && p._id.toString() === productId)
+            );
+          } catch (err) {
+            console.warn("Could not load wishlist status.");
           }
-        } catch (err) {
-          // Bỏ qua lỗi nếu không load được wishlist (ví dụ: chưa có danh sách)
+        }
+
+        if (isLiked) {
+          btn.classList.add("active");
+          btn.innerHTML = `<i class="bi bi-heart-fill"></i> Đã yêu thích`;
+        } else {
+          btn.classList.remove("active");
+          btn.innerHTML = `<i class="bi bi-heart"></i> Yêu thích`;
         }
       }
 

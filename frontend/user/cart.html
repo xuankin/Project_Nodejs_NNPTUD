@@ -13,6 +13,19 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
     />
+    <style>
+      .table-product-image {
+        width: 70px;
+        height: 70px;
+        object-fit: contain; /* Ảnh không bị cắt */
+        border: 1px solid #eee;
+        border-radius: 0.5rem;
+      }
+      .table thead th {
+        font-weight: bold;
+        text-transform: uppercase;
+      }
+    </style>
   </head>
   <body>
     <nav
@@ -20,38 +33,49 @@
       id="navbar"
     ></nav>
     <div class="container my-5">
-      <h2 class="mb-4">Giỏ hàng của bạn</h2>
+      <h2 class="mb-4 text-primary">
+        <i class="bi bi-cart-fill"></i> Giỏ hàng của bạn
+      </h2>
 
-      <div class="table-responsive">
-        <table class="table table-hover align-middle" id="cartTable">
-          <thead class="table-primary">
-            <tr>
-              <th>Sản phẩm</th>
-              <th>Giá</th>
-              <th>Số lượng</th>
-              <th>Tổng</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
+      <div class="row">
+        <div class="col-lg-8">
+          <div class="table-responsive bg-white rounded shadow-sm p-3">
+            <table class="table table-hover align-middle" id="cartTable">
+              <thead class="table-light">
+                <tr>
+                  <th style="width: 40%">Sản phẩm</th>
+                  <th style="width: 15%">Giá</th>
+                  <th style="width: 20%">Số lượng</th>
+                  <th style="width: 15%">Tổng</th>
+                  <th style="width: 10%"></th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
 
-      <div class="text-end mb-3">
-        <h4>
-          Tổng tiền:
-          <span id="totalAmount" class="text-danger fw-bold">0</span>đ
-        </h4>
-      </div>
+        <div class="col-lg-4">
+          <div class="card shadow-lg border-0 rounded-3">
+            <div class="card-header bg-primary text-white fs-5 fw-bold">
+              Tổng kết đơn hàng
+            </div>
+            <div class="card-body">
+              <h4 class="d-flex justify-content-between">
+                <span>Tổng tiền:</span>
+                <span id="totalAmount" class="text-danger fw-bold">0</span>đ
+              </h4>
 
-      <div class="text-end">
-        <button
-          class="btn btn-success btn-lg"
-          data-bs-toggle="modal"
-          data-bs-target="#checkoutModal"
-        >
-          Thanh toán
-        </button>
+              <button
+                class="btn btn-success btn-lg w-100 mt-4 shadow-lg"
+                data-bs-toggle="modal"
+                data-bs-target="#checkoutModal"
+              >
+                Xác nhận đặt hàng
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -69,6 +93,11 @@
           <div class="modal-body">
             <form id="checkoutForm">
               <div class="row g-3">
+                <div class="col-12">
+                  <h6 class="text-primary">
+                    <i class="bi bi-geo-alt-fill"></i> Thông tin giao hàng
+                  </h6>
+                </div>
                 <div class="col-md-6">
                   <label class="form-label">Họ tên</label>
                   <input
@@ -91,10 +120,15 @@
                     required
                   />
                 </div>
+                <div class="col-12 mt-4">
+                  <h6 class="text-primary">
+                    <i class="bi bi-wallet-fill"></i> Thanh toán & Mã giảm giá
+                  </h6>
+                </div>
                 <div class="col-md-6">
                   <label class="form-label">Phương thức thanh toán</label>
                   <select class="form-select" id="paymentMethod">
-                    <option value="COD">Thanh toán khi nhận hàng</option>
+                    <option value="COD">Thanh toán khi nhận hàng (COD)</option>
                     <option value="BANK">Chuyển khoản ngân hàng</option>
                     <option value="MOMO">Momo</option>
                     <option value="ZALOPAY">ZaloPay</option>
@@ -145,9 +179,7 @@
           currentCart = cart; // Lưu giỏ hàng
           const tbody = document.querySelector("#cartTable tbody");
           const totalAmountEl = document.getElementById("totalAmount");
-          const checkoutBtn = document.querySelector(
-            '[data-bs-target="#checkoutModal"]'
-          );
+          const checkoutBtn = document.querySelector(".btn-success.btn-lg");
 
           let total = 0;
           tbody.innerHTML = "";
@@ -160,7 +192,7 @@
 
           if (validItems.length === 0) {
             tbody.innerHTML =
-              '<tr><td colspan="5" class="text-center py-4">Giỏ hàng trống</td></tr>';
+              '<tr><td colspan="5" class="text-center py-4 text-muted">Giỏ hàng trống</td></tr>';
             totalAmountEl.textContent = "0";
             return;
           }
@@ -171,31 +203,28 @@
             total += lineTotal;
             const row = document.createElement("tr");
 
-            // 🎯 THÊM: Ảnh và Input số lượng
             row.innerHTML = `
               <td>
                 <div class="d-flex align-items-center">
                   <img src="${p.images?.[0] || "/assets/img/no-image.png"}" 
-                       alt="${
-                         p.name
-                       }" style="width: 50px; height: 50px; object-fit: cover; margin-right: 10px;">
+                       alt="${p.name}" class="table-product-image me-3">
                   <span>${p.name || "N/A"}</span>
                 </div>
               </td>
               <td>${(p.price || 0).toLocaleString()}đ</td>
               <td>
                   <input type="number" 
-                         class="form-control form-control-sm w-50" 
+                         class="form-control form-control-sm w-75" 
                          value="${item.quantity || 0}" 
                          min="1" 
                          onchange="updateQuantity('${p._id}', this.value)">
               </td>
-              <td>${lineTotal.toLocaleString()}đ</td>
+              <td class="fw-bold text-danger">${lineTotal.toLocaleString()}đ</td>
               <td>
                 <button class="btn btn-sm btn-outline-danger" onclick="removeFromCart('${
                   p._id
                 }')">
-                  Xóa
+                  <i class="bi bi-trash"></i>
                 </button>
               </td>
             `;
@@ -217,7 +246,6 @@
         }
 
         try {
-          // Logic tính toán sự thay đổi số lượng để gửi POST
           const currentQty =
             currentCart.items.find((i) => i.product._id === productId)
               ?.quantity || 0;
@@ -265,7 +293,6 @@
         }
 
         try {
-          // Endpoint: POST /orders
           const order = await POST("/orders", {
             paymentMethod,
             shippingAddress: { fullName, phone, address },
@@ -273,7 +300,6 @@
             note,
           });
 
-          // Đóng modal và reset form
           const checkoutModalEl = document.getElementById("checkoutModal");
           const modal =
             bootstrap.Modal.getInstance(checkoutModalEl) ||
@@ -282,13 +308,12 @@
           document.getElementById("checkoutForm").reset();
 
           if (paymentMethod !== "COD") {
-            // Chuyển hướng đến trang thanh toán nếu không phải COD
             window.location.href = `/user/payment.html?orderId=${order._id}`;
           } else {
             alert(
               `Đặt hàng thành công! Mã đơn: ${order._id}. Bạn sẽ thanh toán khi nhận hàng.`
             );
-            loadCart(); // Tải lại giỏ hàng (vì giỏ hàng đã bị xóa sau khi đặt)
+            loadCart();
             window.location.href = "/user/orders.html";
           }
         } catch (err) {

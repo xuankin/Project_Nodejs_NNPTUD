@@ -9,39 +9,59 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="../assets/css/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+      .table-responsive {
+        border-radius: 0.5rem;
+      }
+    </style>
   </head>
   <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark" id="navbar"></nav>
     <div class="container my-5">
-      <h2>Quản lý Người dùng</h2>
+      <h2 class="mb-4 text-primary">
+        <i class="fas fa-users me-2"></i> Quản lý Người dùng
+      </h2>
       <button
-        class="btn btn-success mb-3"
+        class="btn btn-success mb-3 shadow-sm"
         data-bs-toggle="modal"
         data-bs-target="#userModal"
         onclick="resetUserForm()"
       >
-        Thêm người dùng
+        <i class="fas fa-user-plus"></i> Thêm người dùng
       </button>
-      <table class="table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Tên</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Hành động</th>
-          </tr>
-        </thead>
-        <tbody id="userTable"></tbody>
-      </table>
+      <div class="table-responsive shadow-sm">
+        <table class="table table-striped table-hover align-middle">
+          <thead class="table-dark">
+            <tr>
+              <th>ID</th>
+              <th>Tên</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Trạng thái</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody id="userTable"></tbody>
+        </table>
+      </div>
     </div>
 
     <div class="modal fade" id="userModal">
       <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
+        <div class="modal-content rounded-4 shadow-lg">
+          <div class="modal-header bg-primary text-white rounded-top-4">
             <h5 id="modalTitle">Thêm người dùng</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
           </div>
           <div class="modal-body">
             <form id="userForm">
@@ -73,11 +93,16 @@
                 id="password"
                 placeholder="Mật khẩu (Bỏ trống nếu không đổi)"
               />
-              <select class="form-control" id="role"></select>
+              <select class="form-select" id="role"></select>
             </form>
           </div>
           <div class="modal-footer">
-            <button class="btn btn-primary" onclick="saveUser()">Lưu</button>
+            <button class="btn btn-secondary" data-bs-dismiss="modal">
+              <i class="fas fa-times"></i> Hủy
+            </button>
+            <button class="btn btn-primary" onclick="saveUser()">
+              <i class="fas fa-save"></i> Lưu
+            </button>
           </div>
         </div>
       </div>
@@ -101,22 +126,31 @@
       async function loadUsers() {
         const users = await GET("/users"); // Giả định API GET /users trả về cả isActive/isDeleted
         const roles = await GET("/roles");
-        document.getElementById("userTable").innerHTML = users
+
+        const tbody = document.getElementById("userTable");
+        tbody.innerHTML = users
           .map(
             (u) => `
-        <tr class="${u.isDeleted ? "text-muted" : ""}">
-          <td>${u._id}</td>
+        <tr class="${u.isDeleted ? "text-muted table-light" : ""}">
+          <td>${u._id.substring(0, 8)}...</td>
           <td>${u.fullName}</td>
           <td>${u.email}</td>
-          <td>${u.role?.name || "—"}</td>
+          <td><span class="badge bg-secondary">${
+            u.role?.name || "—"
+          }</span></td>
+          <td>${
+            u.isDeleted
+              ? '<span class="badge bg-danger">Đã xóa</span>'
+              : '<span class="badge bg-success">Hoạt động</span>'
+          }</td>
           <td>
-            <button class="btn btn-sm btn-warning" onclick="editUser('${
+            <button class="btn btn-sm btn-warning me-2 shadow-sm" onclick="editUser('${
               u._id
-            }')">Sửa</button>
+            }')"><i class="fas fa-edit"></i> Sửa</button>
             ${
               u.isDeleted
-                ? `<button class="btn btn-sm btn-info" onclick="restoreUser('${u._id}')">Khôi phục</button>`
-                : `<button class="btn btn-sm btn-danger" onclick="deleteUser('${u._id}')">Xóa</button>`
+                ? `<button class="btn btn-sm btn-info shadow-sm text-white" onclick="restoreUser('${u._id}')"><i class="fas fa-sync-alt"></i> Khôi phục</button>`
+                : `<button class="btn btn-sm btn-danger shadow-sm" onclick="deleteUser('${u._id}')"><i class="fas fa-trash"></i> Xóa</button>`
             }
           </td>
         </tr>

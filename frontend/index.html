@@ -8,7 +8,110 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
     <link rel="stylesheet" href="assets/css/style.css" />
+    <style>
+      /* CSS TỐI ƯU MỚI */
+      :root {
+        --bs-border-radius: 0.75rem; /* Tăng độ bo tròn tổng thể */
+      }
+      .category-section {
+        margin-bottom: 4rem;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 2rem;
+      }
+      .category-title {
+        border-left: 5px solid #0d6efd;
+        padding-left: 1rem;
+        margin-bottom: 2rem;
+        font-weight: 700;
+        color: #333;
+      }
+
+      /* ĐIỀU CHỈNH CARD SẢN PHẨM */
+      .product-card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        border-radius: var(--bs-border-radius) !important;
+      }
+      .card-img-container {
+        height: 160px;
+        background-color: #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        border-bottom: 1px solid #eee;
+        border-top-left-radius: var(--bs-border-radius);
+        border-top-right-radius: var(--bs-border-radius);
+      }
+      .card-img-top-custom {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        transition: transform 0.3s ease;
+      }
+      .card-img-top-custom:hover {
+        transform: scale(1.05);
+      }
+      .card-body {
+        padding: 0.75rem;
+      }
+      .card-title {
+        font-size: 0.95rem;
+        margin-bottom: 0.25rem !important;
+        height: 38px;
+        overflow: hidden;
+      }
+      .filter-box {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: var(--bs-border-radius) !important;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+      }
+      /* Style cho Rating */
+      .rating-stars .fa-star {
+        color: #ffc107;
+      }
+      /* CSS BANNER & SIDEBAR MỚI */
+      .carousel-inner .carousel-item img {
+        height: 300px !important;
+        object-fit: cover;
+      }
+      .category-sidebar-nav {
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: var(--bs-border-radius);
+        padding: 0;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+      }
+      .category-sidebar-item {
+        padding: 10px 15px;
+        border-bottom: 1px solid #eee;
+        font-size: 1rem;
+        color: #333;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+      .category-sidebar-item:hover {
+        background-color: #f8f9fa;
+        color: var(--bs-primary);
+      }
+      .category-sidebar-item:last-child {
+        border-bottom: none;
+      }
+      .category-sidebar-item i {
+        color: var(--bs-primary);
+        margin-right: 10px;
+      }
+    </style>
   </head>
   <body>
     <nav
@@ -16,65 +119,579 @@
       id="navbar"
     ></nav>
 
-    <div class="container my-5">
-      <h2 class="text-center mb-4">Sản phẩm nổi bật</h2>
-      <div class="row" id="products">
-        <div class="col-12 text-center py-5">
-          <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Đang tải...</span>
+    <div class="container my-4">
+      <div class="row g-3">
+        <div class="col-md-3">
+          <nav class="category-sidebar-nav p-0" id="main-category-sidebar">
+            <div
+              class="p-3 bg-primary text-white"
+              style="
+                border-top-left-radius: var(--bs-border-radius);
+                border-top-right-radius: var(--bs-border-radius);
+              "
+            >
+              <i class="fas fa-list"></i> Danh Mục Sản Phẩm
+            </div>
+            <div id="sidebar-categories-list">
+              <div class="text-center py-5">
+                <div
+                  class="spinner-border spinner-border-sm text-primary"
+                  role="status"
+                ></div>
+              </div>
+            </div>
+          </nav>
+        </div>
+
+        <div class="col-md-9">
+          <div
+            id="bannerCarousel"
+            class="carousel slide"
+            data-bs-ride="carousel"
+            data-bs-interval="4000"
+          >
+            <div class="carousel-indicators">
+              <button
+                type="button"
+                data-bs-target="#bannerCarousel"
+                data-bs-slide-to="0"
+                class="active"
+                aria-current="true"
+                aria-label="Slide 1"
+              ></button>
+              <button
+                type="button"
+                data-bs-target="#bannerCarousel"
+                data-bs-slide-to="1"
+                aria-label="Slide 2"
+              ></button>
+              <button
+                type="button"
+                data-bs-target="#bannerCarousel"
+                data-bs-slide-to="2"
+                aria-label="Slide 3"
+              ></button>
+              <button
+                type="button"
+                data-bs-target="#bannerCarousel"
+                data-bs-slide-to="3"
+                aria-label="Slide 4"
+              ></button>
+            </div>
+            <div
+              class="carousel-inner"
+              style="border-radius: var(--bs-border-radius)"
+            >
+              <div class="carousel-item active">
+                <img
+                  src="/uploads/banner1.png"
+                  class="d-block w-100"
+                  alt="Banner 1"
+                />
+              </div>
+              <div class="carousel-item">
+                <img
+                  src="/uploads/banner2.png"
+                  class="d-block w-100"
+                  alt="Banner 2"
+                />
+              </div>
+              <div class="carousel-item">
+                <img
+                  src="/uploads/banner3.png"
+                  class="d-block w-100"
+                  alt="Banner 3"
+                />
+              </div>
+              <div class="carousel-item">
+                <img
+                  src="/uploads/banner4.png"
+                  class="d-block w-100"
+                  alt="Banner 4"
+                />
+              </div>
+            </div>
+            <button
+              class="carousel-control-prev"
+              type="button"
+              data-bs-target="#bannerCarousel"
+              data-bs-slide="prev"
+            >
+              <span
+                class="carousel-control-prev-icon"
+                aria-hidden="true"
+              ></span>
+              <span class="visually-hidden">Trước</span>
+            </button>
+            <button
+              class="carousel-control-next"
+              type="button"
+              data-bs-target="#bannerCarousel"
+              data-bs-slide="next"
+            >
+              <span
+                class="carousel-control-next-icon"
+                aria-hidden="true"
+              ></span>
+              <span class="visually-hidden">Sau</span>
+            </button>
           </div>
         </div>
       </div>
     </div>
+    <div class="container my-5">
+      <div class="row">
+        <div class="col-md-3">
+          <div class="filter-box sticky-top" style="top: 20px">
+            <h5 class="mb-3 text-primary">
+              <i class="fas fa-filter"></i> Bộ Lọc & Sắp Xếp
+            </h5>
 
+            <div class="input-group mb-3">
+              <input
+                type="text"
+                class="form-control"
+                id="search-input"
+                placeholder="Tìm sản phẩm..."
+                aria-label="Tìm kiếm"
+              />
+              <button
+                class="btn btn-outline-primary"
+                type="button"
+                onclick="applyFilters()"
+              >
+                <i class="fas fa-search"></i>
+              </button>
+            </div>
+
+            <div class="mb-3">
+              <label for="sort-select" class="form-label fw-bold"
+                >Sắp xếp theo:</label
+              >
+              <select
+                class="form-select"
+                id="sort-select"
+                onchange="applyFilters()"
+              >
+                <option value="">Mặc định</option>
+                <option value="price_asc">Giá: Thấp đến Cao</option>
+                <option value="price_desc">Giá: Cao đến Thấp</option>
+                <option value="newest">Mới nhất (Thời gian)</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-bold">Danh mục:</label>
+              <div id="category-filters">
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="radio"
+                    name="category-radio"
+                    id="cat-all"
+                    value=""
+                    checked
+                    onchange="applyFilters()"
+                  />
+                  <label class="form-check-label" for="cat-all">
+                    Tất cả sản phẩm
+                  </label>
+                </div>
+                <div class="text-center py-2" id="category-loader">
+                  <div
+                    class="spinner-border spinner-border-sm text-primary"
+                    role="status"
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-9">
+          <h2 class="mb-4">
+            <i class="fas fa-mobile-alt text-primary"></i> Danh Sách Sản Phẩm
+          </h2>
+          <div class="row" id="filtered-products">
+            <div class="col-12 text-center py-5">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Đang tải...</span>
+              </div>
+            </div>
+          </div>
+          <nav aria-label="Phân trang" class="mt-4">
+            <ul
+              class="pagination justify-content-center"
+              id="product-pagination"
+            ></ul>
+          </nav>
+        </div>
+      </div>
+
+      <h2 class="text-center my-5 category-title-main">
+        <i class="fas fa-star text-warning"></i> SẢN PHẨM NỔI BẬT KHÁC
+      </h2>
+      <div id="featured-categories"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="assets/js/api.js"></script>
     <script src="assets/js/auth.js"></script>
 
     <script>
-      async function loadProducts() {
+      let currentPage = 1;
+      let currentLimit = 8;
+      let currentQuery = {};
+
+      /**
+       * Tạo HTML cho các ngôi sao đánh giá
+       */
+      function renderRating(rating) {
+        const fullStars = Math.floor(rating);
+        const hasHalfStar = rating % 1 !== 0;
+        const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+        let html = '<span class="rating-stars">';
+        for (let i = 0; i < fullStars; i++) {
+          html += '<i class="fas fa-star"></i>';
+        }
+        if (hasHalfStar) {
+          html += '<i class="fas fa-star-half-alt"></i>';
+        }
+        for (let i = 0; i < emptyStars; i++) {
+          html += '<i class="far fa-star"></i>';
+        }
+        html += "</span>";
+        return html;
+      }
+
+      /**
+       * Tải danh mục và hiển thị trong Sidebar LỌC VÀ SIDEBAR NHANH
+       */
+      async function loadCategories() {
         try {
-          const products = await GET("/products"); // Endpoint: GET /products
-          const container = document.getElementById("products");
-          if (!products || products.length === 0) {
-            container.innerHTML = `<div class="col-12 text-center py-5 text-muted">Chưa có sản phẩm.</div>`;
-            return;
+          const categories = await GET("/categories");
+          const loader = document.getElementById("category-loader");
+          const sidebarList = document.getElementById(
+            "sidebar-categories-list"
+          );
+
+          if (loader) loader.style.display = "none";
+
+          if (categories && categories.length > 0) {
+            // --- 1. Tạo HTML cho Sidebar Lọc (Radio buttons) ---
+            const radioHtml = categories
+              .map(
+                (c) => `
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="radio"
+                    name="category-radio"
+                    id="cat-${c._id}"
+                    value="${c._id}"
+                    onchange="applyFilters()"
+                  />
+                  <label class="form-check-label" for="cat-${c._id}">
+                    ${c.name}
+                  </label>
+                </div>
+              `
+              )
+              .join("");
+            document
+              .getElementById("cat-all")
+              .closest(".form-check")
+              .insertAdjacentHTML("afterend", radioHtml);
+
+            // --- 2. Tạo HTML cho Sidebar Nhanh (Links) ---
+            const iconMap = {
+              iphone: "fa-brands fa-apple",
+              samsung: "fa-brands fa-samsung",
+              laptop: "fa-laptop",
+              "máy tính bảng": "fa-tablet-alt",
+              "đồng hồ": "fa-watch",
+              "âm thanh": "fa-headphones",
+              "tin tức": "fa-newspaper",
+              "phụ kiện": "fa-battery-full",
+            };
+
+            const linkHtml = categories
+              .map((c) => {
+                const nameLower = c.name.toLowerCase();
+                const iconClass =
+                  Object.keys(iconMap).find((key) => nameLower.includes(key)) ||
+                  "fa-mobile-alt";
+
+                return `
+                    <div class="category-sidebar-item" onclick="selectCategory('${c._id}')">
+                        <i class="fas ${iconClass}"></i> ${c.name}
+                        <i class="fas fa-chevron-right small text-muted"></i>
+                    </div>
+                `;
+              })
+              .join("");
+
+            sidebarList.innerHTML = linkHtml;
           }
 
-          container.innerHTML = products
-            .map(
-              (p) => `
-            <div class="col-md-4 mb-4">
-              <div class="card h-100 shadow-sm">
-                <img src="${p.images?.[0] || "/assets/img/no-image.png"}" 
-                     class="card-img-top" style="height:200px; object-fit:cover;">
-                <div class="card-body d-flex flex-column">
-                  <h5 class="card-title">${p.name}</h5>
-                  <p class="text-danger fw-bold">${p.price.toLocaleString()}đ</p>
-                  <div class="mt-auto d-flex gap-2">
-                    <a href="/user/product-detail.html?id=${p._id}" 
-                       class="btn btn-outline-primary flex-fill">Chi tiết</a>
-                    <button class="btn btn-success" onclick="addToCart('${
-                      p._id
-                    }')">Giỏ</button>
-                    <button class="btn btn-outline-danger" onclick="addToWishlist('${
-                      p._id
-                    }')">Yêu thích</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          `
-            )
-            .join("");
+          loadFeaturedCategories(categories);
         } catch (err) {
-          alert("Lỗi tải sản phẩm: " + err.message);
+          console.error("Lỗi tải danh mục:", err);
+          const loader = document.getElementById("category-loader");
+          if (loader)
+            loader.innerHTML = `<p class="text-danger small">Lỗi tải danh mục.</p>`;
+          // Xóa loader sidebar nhanh nếu lỗi
+          sidebarList.innerHTML = `<p class="text-danger small p-2">Lỗi tải danh mục.</p>`;
         }
       }
 
+      /**
+       * Áp dụng các bộ lọc từ Sidebar và tải lại sản phẩm chính
+       */
+      function applyFilters(page = 1) {
+        const search = document.getElementById("search-input").value.trim();
+        const sort = document.getElementById("sort-select").value;
+        const categoryRadio = document.querySelector(
+          'input[name="category-radio"]:checked'
+        );
+
+        const category = categoryRadio ? categoryRadio.value : "";
+
+        currentQuery = {};
+        if (search) currentQuery.search = search;
+        if (sort) currentQuery.sort = sort;
+        if (category) currentQuery.category = category;
+
+        currentPage = page;
+
+        loadProducts(
+          currentQuery,
+          currentPage,
+          currentLimit,
+          "filtered-products"
+        );
+      }
+
+      /**
+       * Tải sản phẩm chính với phân trang, lọc và sắp xếp
+       */
+      async function loadProducts(
+        query = {},
+        page = 1,
+        limit = 8,
+        containerId = "filtered-products"
+      ) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = `<div class="col-12 text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Đang tải...</span></div></div>`;
+
+        try {
+          const queryParams = new URLSearchParams({
+            ...query,
+            page: page,
+            limit: limit,
+          }).toString();
+
+          const res = await GET(`/products?${queryParams}`);
+          const products = res.products;
+          const pagination = res.pagination;
+
+          if (!products || products.length === 0) {
+            container.innerHTML = `<div class="col-12 text-center py-5 text-muted">Không tìm thấy sản phẩm.</div>`;
+            document.getElementById("product-pagination").innerHTML = "";
+            return;
+          }
+
+          // SỬ DỤNG col-md-3 để hiển thị 4 cột/hàng
+          container.innerHTML = products
+            .map(
+              (p) => `<div class="col-md-3 mb-4">${createProductCard(p)}</div>`
+            )
+            .join("");
+
+          if (containerId === "filtered-products") {
+            renderPagination(pagination);
+          }
+        } catch (err) {
+          container.innerHTML = `<div class="col-12 text-center py-5 text-danger">Lỗi tải sản phẩm: ${err.message}</div>`;
+        }
+      }
+
+      /**
+       * Tải sản phẩm nổi bật theo từng danh mục
+       */
+      async function loadFeaturedCategories(categories) {
+        const container = document.getElementById("featured-categories");
+        container.innerHTML = "";
+
+        if (!categories || categories.length === 0) return;
+
+        for (const category of categories) {
+          try {
+            const res = await GET(`/products?category=${category._id}&limit=4`);
+            const products = res.products || [];
+
+            if (products.length > 0) {
+              const categorySection = document.createElement("div");
+              categorySection.className = "category-section";
+              categorySection.innerHTML = `
+                          <h3 class="category-title mt-4">${category.name}</h3>
+                          <div class="row">
+                              ${products
+                                .map(
+                                  (p) =>
+                                    // SỬ DỤNG col-md-3 để hiển thị 4 cột/hàng
+                                    `<div class="col-md-3 mb-4">${createProductCard(
+                                      p
+                                    )}</div>`
+                                )
+                                .join("")}
+                          </div>
+                          <div class="text-end">
+                            <button class="btn btn-link" onclick="selectCategory('${
+                              category._id
+                            }')">Xem tất cả <i class="fas fa-arrow-right"></i></button>
+                          </div>
+                      `;
+              container.appendChild(categorySection);
+            }
+          } catch (error) {
+            console.warn(
+              `Không tải được sản phẩm cho danh mục ${category.name}`,
+              error
+            );
+          }
+        }
+      }
+
+      /**
+       * Chuyển danh mục được chọn trong Sidebar và tải lại sản phẩm chính
+       */
+      function selectCategory(categoryId) {
+        // Cập nhật radio button lọc
+        const radio = document.getElementById(`cat-${categoryId}`);
+        if (radio) radio.checked = true;
+
+        // Cuộn tới khu vực lọc và áp dụng bộ lọc
+        document
+          .getElementById("filtered-products")
+          .scrollIntoView({ behavior: "smooth" });
+
+        applyFilters(1);
+      }
+
+      /**
+       * Tạo thẻ sản phẩm (Card)
+       */
+      function createProductCard(p) {
+        const avgRating = p.avgRating ? p.avgRating.toFixed(1) : 0;
+        const reviewCount = p.reviewCount || 0;
+        const wishlistCount = p.wishlistCount || 0;
+        const userLiked = p.userLiked || false;
+
+        const wishlistIconClass = userLiked
+          ? "fas text-danger"
+          : "far text-danger";
+
+        return `
+            <div class="card h-100 shadow-sm product-card">
+              <div class="card-img-container">
+                <img src="${p.images?.[0] || "/assets/img/no-image.png"}" 
+                   class="card-img-top-custom" alt="${p.name}">
+              </div>
+              <div class="card-body d-flex flex-column">
+                <h5 class="card-title text-truncate">${p.name}</h5>
+                
+                <div class="mb-2 d-flex justify-content-between align-items-center">
+                    <div>
+                       ${renderRating(avgRating)} 
+                       <span class="small text-muted">(${reviewCount} đánh giá)</span>
+                    </div>
+                    <div class="text-secondary small">
+                        <i class="${wishlistIconClass} fa-heart"></i> ${wishlistCount}
+                    </div>
+                </div>
+
+                <p class="text-danger fw-bold fs-5">${p.price.toLocaleString()}đ</p>
+                
+                <div class="mt-auto d-flex gap-2">
+                  <a href="/user/product-detail.html?id=${p._id}" 
+                     class="btn btn-outline-primary flex-fill btn-sm"><i class="fas fa-eye"></i> Chi tiết</a>
+                  <button class="btn btn-success btn-sm" onclick="addToCart('${
+                    p._id
+                  }')"><i class="fas fa-shopping-cart"></i> Giỏ</button>
+                  <button class="btn btn-outline-danger btn-sm" onclick="addToWishlist('${
+                    p._id
+                  }')">
+                    <i class="${wishlistIconClass} fa-heart"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+      }
+
+      /**
+       * Hàm tạo phân trang
+       */
+      function renderPagination(pagination) {
+        const ul = document.getElementById("product-pagination");
+        ul.innerHTML = "";
+
+        if (!pagination || pagination.pages <= 1) return;
+
+        const { page, pages } = pagination;
+
+        // Nút Previous
+        ul.innerHTML += `
+              <li class="page-item ${page === 1 ? "disabled" : ""}">
+                  <a class="page-link" href="#" onclick="event.preventDefault(); applyFilters(${
+                    page - 1
+                  })">Trước</a>
+              </li>
+          `;
+
+        // Các nút số trang
+        const startPage = Math.max(1, page - 2);
+        const endPage = Math.min(pages, page + 2);
+
+        // Nút số 1
+        if (startPage > 1) {
+          ul.innerHTML += `<li class="page-item"><a class="page-link" href="#" onclick="event.preventDefault(); applyFilters(1)">1</a></li>`;
+          if (startPage > 2)
+            ul.innerHTML += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+          ul.innerHTML += `
+                  <li class="page-item ${page === i ? "active" : ""}">
+                      <a class="page-link" href="#" onclick="event.preventDefault(); applyFilters(${i})">${i}</a>
+                  </li>
+              `;
+        }
+
+        // Nút số cuối
+        if (endPage < pages) {
+          if (endPage < pages - 1)
+            ul.innerHTML += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+          ul.innerHTML += `<li class="page-item"><a class="page-link" href="#" onclick="event.preventDefault(); applyFilters(${pages})">${pages}</a></li>`;
+        }
+
+        // Nút Next
+        ul.innerHTML += `
+              <li class="page-item ${page === pages ? "disabled" : ""}">
+                  <a class="page-link" href="#" onclick="event.preventDefault(); applyFilters(${
+                    page + 1
+                  })">Sau</a>
+              </li>
+          `;
+      }
+
+      // ====================================================
+      // LOGIC CHỨC NĂNG (ĐƯỢC GIỮ NGUYÊN)
+      // ====================================================
       async function addToCart(productId) {
         if (!isLoggedIn()) return (window.location.href = "/login.html");
         try {
-          // Endpoint: POST /carts
           await POST("/carts", { product: productId, quantity: 1 });
           alert("Thêm vào giỏ thành công!");
         } catch (err) {
@@ -85,15 +702,28 @@
       async function addToWishlist(productId) {
         if (!isLoggedIn()) return (window.location.href = "/login.html");
         try {
-          // SỬA LỖI ENDPOINT: POST /wishlists
-          await POST("/wishlists", { product: productId });
-          alert("Thêm yêu thích thành công!");
+          const isCurrentlyLiked = document.querySelector(
+            `.btn-outline-danger [onclick="addToWishlist('${productId}')"] i.fas`
+          );
+
+          if (isCurrentlyLiked) {
+            await DEL(`/wishlists/${productId}`);
+            alert("Đã xóa khỏi danh sách yêu thích!");
+          } else {
+            await POST("/wishlists", { product: productId });
+            alert("Thêm yêu thích thành công!");
+          }
+
+          applyFilters(currentPage);
         } catch (err) {
           alert("Lỗi: " + err.message);
         }
       }
 
-      document.addEventListener("DOMContentLoaded", loadProducts);
+      document.addEventListener("DOMContentLoaded", () => {
+        loadCategories();
+        applyFilters();
+      });
     </script>
   </body>
 </html>

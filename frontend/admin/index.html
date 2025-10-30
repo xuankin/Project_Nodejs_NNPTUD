@@ -9,72 +9,97 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="../assets/css/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
+    <style>
+      :root {
+        --bs-border-radius: 0.5rem;
+      }
+      .list-group-item {
+        border-radius: 0 !important;
+        border-left: 3px solid transparent;
+        transition: all 0.2s;
+      }
+      .list-group-item:hover,
+      .list-group-item.active {
+        background-color: #e9ecef;
+        border-left-color: var(--bs-primary);
+        font-weight: 500;
+        color: var(--bs-primary);
+      }
+      .admin-card {
+        border-radius: var(--bs-border-radius) !important;
+      }
+    </style>
   </head>
   <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-      <div class="container">
-        <a class="navbar-brand" href="/admin/dashboard.html">Admin Panel</a>
-        <div id="navbar"></div>
-      </div>
-    </nav>
-
-    <div class="container mt-4">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark" id="navbar"></nav>
+    <div class="container mt-5">
       <div class="row">
         <div class="col-md-3">
-          <div class="list-group">
+          <div class="list-group shadow-sm admin-card">
             <a
               href="dashboard.html"
-              class="list-group-item list-group-item-action active"
-              >Dashboard</a
+              class="list-group-item list-group-item-action border-top-0 border-right-0 border-left-0"
+              ><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a
             >
             <a
               href="products.html"
               class="list-group-item list-group-item-action"
-              >Sản phẩm</a
+              ><i class="fas fa-box me-2"></i> Sản phẩm</a
             >
             <a href="orders.html" class="list-group-item list-group-item-action"
-              >Đơn hàng</a
+              ><i class="fas fa-receipt me-2"></i> Đơn hàng</a
             >
             <a href="users.html" class="list-group-item list-group-item-action"
-              >Người dùng</a
+              ><i class="fas fa-users me-2"></i> Người dùng</a
             >
             <a
               href="coupons.html"
               class="list-group-item list-group-item-action"
-              >Mã giảm giá</a
+              ><i class="fas fa-gift me-2"></i> Mã giảm giá</a
             >
             <a
               href="categories.html"
               class="list-group-item list-group-item-action"
-              >Danh mục</a
+              ><i class="fas fa-tags me-2"></i> Danh mục</a
             >
             <a
               href="inventory.html"
               class="list-group-item list-group-item-action"
-              >Quản lý Kho</a
+              ><i class="fas fa-warehouse me-2"></i> Quản lý Kho</a
             >
             <a
               href="notifications.html"
               class="list-group-item list-group-item-action"
-              >Thông báo</a
+              ><i class="fas fa-bell me-2"></i> Thông báo</a
             >
             <a href="roles.html" class="list-group-item list-group-item-action"
-              >Roles</a
+              ><i class="fas fa-user-tag me-2"></i> Roles</a
+            >
+            <a
+              href="payments.html"
+              class="list-group-item list-group-item-action"
+              ><i class="fas fa-credit-card me-2"></i> Giao dịch</a
             >
           </div>
         </div>
         <div class="col-md-9">
-          <div class="card">
-            <div class="card-body">
-              <h4 class="text-primary">
+          <div class="card shadow-lg admin-card">
+            <div class="card-body p-5">
+              <h2 class="text-primary mb-3">
                 Chào mừng đến với Bảng điều khiển Admin
-              </h4>
-              <p>
+              </h2>
+              <p class="fs-5">
                 Sử dụng menu bên trái để quản lý Sản phẩm, Đơn hàng, Người dùng
                 và các cài đặt hệ thống.
               </p>
-              <a href="dashboard.html" class="btn btn-primary mt-3"
-                >Xem Thống kê chi tiết</a
+              <a
+                href="dashboard.html"
+                class="btn btn-primary btn-lg mt-3 shadow-sm"
+                ><i class="fas fa-chart-area me-2"></i> Xem Thống kê chi tiết</a
               >
             </div>
           </div>
@@ -85,13 +110,21 @@
     <script src="../assets/js/api.js"></script>
     <script src="../assets/js/auth.js"></script>
     <script>
-      // 🎯 KIỂM TRA QUYỀN TRUY CẬP (Rất quan trọng cho trang Admin)
+      // KIỂM TRA QUYỀN TRUY CẬP (Rất quan trọng cho trang Admin)
       if (getRole() !== "ADMIN") {
         alert("Bạn không có quyền truy cập trang quản trị!");
         window.location.href = "/";
       }
 
-      // Không cần loadStats() ở đây vì dashboard.html đã xử lý
+      // Highlight dashboard link by default
+      document.addEventListener("DOMContentLoaded", () => {
+        const dashboardLink = document.querySelector(
+          'a[href="dashboard.html"]'
+        );
+        if (dashboardLink) {
+          dashboardLink.classList.add("active");
+        }
+      });
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   </body>

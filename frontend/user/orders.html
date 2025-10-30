@@ -13,6 +13,12 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
     />
+    <style>
+      .table thead th {
+        font-weight: bold;
+        text-transform: uppercase;
+      }
+    </style>
   </head>
   <body>
     <nav
@@ -20,25 +26,53 @@
       id="navbar"
     ></nav>
     <div class="container my-5">
-      <h2>Lịch sử đơn hàng</h2>
-      <table class="table" id="orderTable">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Tổng tiền</th>
-            <th>Trạng thái</th>
-            <th>Ngày</th>
-            <th>Hành động</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+      <h2 class="mb-4 text-primary">
+        <i class="bi bi-clock-history"></i> Lịch sử đơn hàng
+      </h2>
+
+      <div class="table-responsive bg-white rounded shadow-sm p-3">
+        <table class="table table-hover align-middle" id="orderTable">
+          <thead class="table-light">
+            <tr>
+              <th>Mã đơn</th>
+              <th>Tổng tiền</th>
+              <th>Trạng thái</th>
+              <th>Ngày đặt</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </div>
 
     <script src="../assets/js/api.js"></script>
     <script src="../assets/js/auth.js"></script>
     <script>
       if (!isLoggedIn()) window.location.href = "/login.html";
+
+      function getStatusBadge(status) {
+        let color = "";
+        switch (status) {
+          case "Delivered":
+            color = "success";
+            break;
+          case "Shipping":
+            color = "info";
+            break;
+          case "Confirmed":
+            color = "primary";
+            break;
+          case "Cancelled":
+            color = "danger";
+            break;
+          case "Pending":
+          default:
+            color = "warning";
+            break;
+        }
+        return `<span class="badge bg-${color} text-uppercase shadow-sm">${status}</span>`;
+      }
 
       async function loadOrders() {
         try {
@@ -49,21 +83,23 @@
               .map(
                 (o) => `
           <tr>
-            <td>${o._id}</td>
-            <td>${o.finalAmount.toLocaleString()}đ</td>
-            <td><span class="badge bg-${
-              o.status === "Delivered" ? "success" : "warning"
-            }">${o.status}</span></td>
+            <td class="fw-bold">${o._id.substring(0, 8)}...</td>
+            <td class="text-danger">${o.finalAmount.toLocaleString()}đ</td>
+            <td>${getStatusBadge(o.status)}</td>
             <td>${new Date(o.createdAt).toLocaleDateString()}</td>
             <td>
               ${
                 o.status === "Pending" && o.paymentMethod !== "COD"
-                  ? `<a href="/user/payment.html?orderId=${o._id}" class="btn btn-sm btn-info me-2">Thanh toán</a>` // Nút Thanh toán
+                  ? `<a href="/user/payment.html?orderId=${o._id}" class="btn btn-sm btn-info me-2 text-white shadow-sm">
+                        <i class="bi bi-credit-card"></i> Thanh toán
+                    </a>` // Nút Thanh toán
                   : ""
               }
               ${
                 o.status === "Pending" || o.status === "Confirmed"
-                  ? `<button class="btn btn-sm btn-danger" onclick="cancelOrder('${o._id}')">Hủy</button>` // Nút Hủy
+                  ? `<button class="btn btn-sm btn-outline-danger shadow-sm" onclick="cancelOrder('${o._id}')">
+                        <i class="bi bi-x-circle"></i> Hủy
+                    </button>` // Nút Hủy
                   : ""
               }
             </td>
@@ -71,12 +107,11 @@
         `
               )
               .join("") ||
-            "<tr><td colspan='5' class='text-center'>Chưa có đơn hàng</td></tr>";
+            "<tr><td colspan='5' class='text-center py-4 text-muted'>Chưa có đơn hàng</td></tr>";
         } catch (err) {
           alert("Lỗi tải đơn hàng: " + err.message);
         }
       }
-      // Thay thế hàm cancelOrder(id) trong orders.html
 
       async function cancelOrder(id) {
         if (
@@ -88,7 +123,6 @@
         const reason = prompt("Lý do hủy (Không bắt buộc):");
 
         try {
-          // Endpoint: POST /orders/:id/cancel
           await POST(`/orders/${id}/cancel`, { reason });
           alert("Hủy thành công! Kho đã được hoàn lại.");
           loadOrders();
@@ -100,7 +134,7 @@
         }
       }
 
-      loadOrders();
+      document.addEventListener("DOMContentLoaded", loadOrders);
     </script>
   </body>
 </html>

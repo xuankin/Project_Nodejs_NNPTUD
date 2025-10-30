@@ -9,24 +9,37 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="../assets/css/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+      .table-responsive {
+        border-radius: 0.5rem;
+      }
+    </style>
   </head>
   <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark" id="navbar"></nav>
     <div class="container my-5">
-      <h2>Quản lý Kho</h2>
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Sản phẩm</th>
-            <th>Tồn kho</th>
-            <th>Số lượng Nhập</th>
-            <th>Số lượng Xuất</th>
-            <th>Hành động</th>
-          </tr>
-        </thead>
-        <tbody id="inventoryTable"></tbody>
-      </table>
+      <h2 class="mb-4 text-primary">
+        <i class="fas fa-warehouse me-2"></i> Quản lý Kho
+      </h2>
+      <div class="table-responsive shadow-sm">
+        <table class="table table-striped table-hover align-middle">
+          <thead class="table-dark">
+            <tr>
+              <th>Sản phẩm</th>
+              <th>Tồn kho Hiện tại</th>
+              <th>Tổng Nhập</th>
+              <th>Tổng Xuất</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody id="inventoryTable"></tbody>
+        </table>
+      </div>
     </div>
 
     <script src="../assets/js/api.js"></script>
@@ -45,19 +58,21 @@
               (i) => `
           <tr>
             <td>${i.product?.name || "—"}</td>
-            <td><strong>${i.currentStock}</strong></td>
-            <td>${i.quantityIn}</td>
-            <td>${i.quantityOut}</td>
+            <td><span class="badge bg-primary fs-6">${
+              i.currentStock
+            }</span></td>
+            <td class="text-success fw-bold">${i.quantityIn}</td>
+            <td class="text-danger fw-bold">${i.quantityOut}</td>
             <td>
-              <button class="btn btn-sm btn-success" onclick="addStock('${
+              <button class="btn btn-sm btn-success me-2 shadow-sm" onclick="addStock('${
                 i.product._id
               }')">
-                Nhập kho
+                <i class="fas fa-plus"></i> Nhập kho
               </button>
-              <button class="btn btn-sm btn-warning" onclick="removeStock('${
+              <button class="btn btn-sm btn-warning shadow-sm" onclick="removeStock('${
                 i.product._id
               }')">
-                Xuất kho
+                <i class="fas fa-minus"></i> Xuất kho
               </button>
             </td>
           </tr>
@@ -74,7 +89,6 @@
         const parsedQty = parseInt(qty);
         if (isNaN(parsedQty) || parsedQty <= 0)
           return alert("Số lượng không hợp lệ");
-        // API PUT /inventories/:productId xử lý quantityIn
         await PUT(`/inventories/${productId}`, { quantityIn: parsedQty });
         loadInventory();
       }
@@ -84,7 +98,6 @@
         const parsedQty = parseInt(qty);
         if (isNaN(parsedQty) || parsedQty <= 0)
           return alert("Số lượng không hợp lệ");
-        // API PUT /inventories/:productId xử lý quantityOut
         await PUT(`/inventories/${productId}`, { quantityOut: parsedQty });
         loadInventory();
       }

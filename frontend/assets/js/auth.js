@@ -48,25 +48,64 @@ function updateNavbar() {
 
   navbar.className = navbarClasses;
 
-  // Định nghĩa các liên kết Admin (BỔ SUNG payments)
-  const adminLinks = [
-    { href: "/admin/dashboard.html", text: "Dashboard" },
-    { href: "/admin/products.html", text: "Sản phẩm" },
-    { href: "/admin/orders.html", text: "Đơn hàng" },
-    { href: "/admin/users.html", text: "Người dùng" },
-    { href: "/admin/coupons.html", text: "Mã giảm giá" },
-    { href: "/admin/inventory.html", text: "Kho" },
-    { href: "/admin/notifications.html", text: "Thông báo" },
-    { href: "/admin/roles.html", text: "Roles" },
-    // 🎯 THÊM: Liên kết Quản lý Giao dịch
-    { href: "/admin/payments.html", text: "Giao dịch" },
+  // Định nghĩa các liên kết User
+  const userLinks = [
+    { href: "/user/cart.html", text: "Giỏ hàng", icon: "fas fa-shopping-cart" },
+    { href: "/user/wishlist.html", text: "Yêu thích", icon: "fas fa-heart" },
+    { href: "/user/orders.html", text: "Đơn hàng", icon: "fas fa-receipt" },
+    {
+      href: "/user/notifications.html",
+      text: "Thông báo",
+      icon: "fas fa-bell",
+    },
+    {
+      href: "/user/store-locator.html",
+      text: "Cửa hàng",
+      icon: "fas fa-store",
+    },
+    { href: "/user/profile.html", text: "Profile", icon: "fas fa-user-circle" },
   ];
+
+  // Định nghĩa các liên kết Admin
+  const adminLinks = [
+    {
+      href: "/admin/dashboard.html",
+      text: "Dashboard",
+      icon: "fas fa-tachometer-alt",
+    },
+    { href: "/admin/products.html", text: "Sản phẩm", icon: "fas fa-box" },
+    { href: "/admin/orders.html", text: "Đơn hàng", icon: "fas fa-receipt" },
+    { href: "/admin/users.html", text: "Người dùng", icon: "fas fa-users" },
+    { href: "/admin/coupons.html", text: "Mã giảm giá", icon: "fas fa-gift" },
+    { href: "/admin/inventory.html", text: "Kho", icon: "fas fa-warehouse" },
+
+    {
+      href: "/admin/notifications.html",
+      text: "Thông báo",
+      icon: "fas fa-bell",
+    },
+    { href: "/admin/roles.html", text: "Roles", icon: "fas fa-user-tag" },
+    {
+      href: "/admin/payments.html",
+      text: "Giao dịch",
+      icon: "fas fa-credit-card",
+    },
+  ];
+
+  const userNavItems = userLinks
+    .map(
+      (link) =>
+        `<li class="nav-item">
+        <a class="nav-link text-white" href="${link.href}"><i class="${link.icon} me-2"></i>${link.text}</a>
+    </li>`
+    )
+    .join("");
 
   const adminNavItems = adminLinks
     .map(
       (link) =>
         `<li class="nav-item">
-        <a class="nav-link text-white" href="${link.href}">${link.text}</a>
+        <a class="nav-link text-white" href="${link.href}"><i class="${link.icon} me-2"></i>${link.text}</a>
     </li>`
     )
     .join("");
@@ -81,20 +120,9 @@ function updateNavbar() {
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav me-auto">
-          <li class="nav-item"><a class="nav-link text-white" href="/index.html">Trang chủ</a></li>
+          <li class="nav-item"><a class="nav-link text-white" href="/index.html"><i class="fas fa-home me-2"></i>Trang chủ</a></li>
           
-          ${
-            !isAdminPage && isUser
-              ? `
-            <li class="nav-item"><a class="nav-link text-white" href="/user/cart.html">Giỏ hàng</a></li>
-            <li class="nav-item"><a class="nav-link text-white" href="/user/wishlist.html">Yêu thích</a></li>
-            <li class="nav-item"><a class="nav-link text-white" href="/user/orders.html">Đơn hàng</a></li>
-            <li class="nav-item"><a class="nav-link text-white" href="/user/notifications.html">Thông báo</a></li>
-            <li class="nav-item"><a class="nav-link text-white" href="/user/profile.html">Profile</a></li> 
-            <li class="nav-item"><a class="nav-link text-white" href="/user/reviews.html">Đánh giá của tôi</a></li> 
-          `
-              : ""
-          }
+          ${!isAdminPage && isUser ? userNavItems : ""}
           
           ${isAdminPage && isAdmin ? adminNavItems : ""}
         </ul>
@@ -102,12 +130,12 @@ function updateNavbar() {
           ${
             isUser
               ? `
-            <li class="nav-item"><span class="nav-link text-white">Xin chào, ${getUserName()}</span></li>
-            <li class="nav-item"><a class="nav-link text-danger fw-bold" href="#" onclick="logout()">Đăng xuất</a></li>
+            <li class="nav-item"><span class="nav-link text-white"><i class="fas fa-user me-2"></i>Xin chào, ${getUserName()}</span></li>
+            <li class="nav-item"><a class="nav-link text-danger fw-bold" href="#" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
           `
               : `
-            <li class="nav-item"><a class="nav-link text-white" href="/login.html">Đăng nhập</a></li>
-            <li class="nav-item"><a class="nav-link text-white" href="/register.html">Đăng ký</a></li>
+            <li class="nav-item"><a class="nav-link text-white" href="/login.html"><i class="fas fa-sign-in-alt me-2"></i>Đăng nhập</a></li>
+            <li class="nav-item"><a class="nav-link text-white" href="/register.html"><i class="fas fa-user-plus me-2"></i>Đăng ký</a></li>
           `
           }
         </ul>

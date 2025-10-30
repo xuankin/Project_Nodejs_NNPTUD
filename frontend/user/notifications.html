@@ -14,6 +14,19 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
     />
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+      .list-group-item {
+        border-radius: 0.75rem !important; /* Bo tròn */
+        border: none !important;
+        transition: transform 0.2s;
+      }
+      .list-group-item:hover {
+        transform: translateY(-2px);
+      }
+      .border-style-custom {
+        border-left: 5px solid;
+      }
+    </style>
   </head>
   <body>
     <nav
@@ -21,17 +34,17 @@
       id="navbar"
     ></nav>
     <div class="container my-5">
-      <h2 class="mb-4">🔔 Thông báo của bạn</h2>
+      <h2 class="mb-4 text-primary">🔔 Thông báo của bạn</h2>
 
       <div class="d-flex justify-content-end mb-3">
         <button
-          class="btn btn-sm btn-outline-secondary me-2"
+          class="btn btn-sm btn-outline-primary me-2"
           onclick="loadNotifications()"
         >
           <i class="bi bi-arrow-clockwise"></i> Tải lại
         </button>
         <button
-          class="btn btn-sm btn-info"
+          class="btn btn-sm btn-info text-white shadow-sm"
           id="markAllReadBtn"
           onclick="markAllAsRead()"
         >
@@ -51,27 +64,29 @@
 
       function getNotiClass(type, isRead) {
         let base =
-          "list-group-item list-group-item-action d-flex justify-content-between align-items-center mb-2 shadow-sm border border-start-0 border-end-0 border-3";
+          "list-group-item list-group-item-action d-flex justify-content-between align-items-center mb-3 shadow-sm border-style-custom";
         let readClass = isRead
           ? "list-group-item-light text-muted"
-          : "bg-white border-primary";
+          : "bg-white";
 
-        if (type === "ORDER") readClass += " border-warning";
-        if (type === "SYSTEM") readClass += " border-danger";
-        if (type === "PROMOTION") readClass += " border-success";
+        let borderClass = "";
+        if (type === "ORDER") borderClass = "border-warning";
+        if (type === "SYSTEM") borderClass = "border-danger";
+        if (type === "PROMOTION") borderClass = "border-success";
+        if (!isRead) borderClass = "border-primary"; // Thông báo chưa đọc luôn nổi bật
 
-        return `${base} ${readClass}`;
+        return `${base} ${readClass} ${borderClass}`;
       }
 
       function getNotiIcon(type) {
         switch (type) {
           case "ORDER":
-            return '<i class="bi bi-box-seam text-warning"></i>';
+            return '<i class="bi bi-box-seam text-warning fs-5"></i>';
           case "PROMOTION":
-            return '<i class="bi bi-gift text-success"></i>';
+            return '<i class="bi bi-gift text-success fs-5"></i>';
           case "SYSTEM":
           default:
-            return '<i class="bi bi-info-circle text-danger"></i>';
+            return '<i class="bi bi-info-circle text-danger fs-5"></i>';
         }
       }
 
@@ -93,21 +108,25 @@
                 <div class="${getNotiClass(n.type, n.isRead)}" id="noti-${
                 n._id
               }">
-                  <div>
+                  <div class="d-flex align-items-start">
                     ${getNotiIcon(n.type)}
-                    <strong class="ms-2">${n.message}</strong>
-                    <small class="text-muted ms-3">${new Date(
-                      n.createdAt
-                    ).toLocaleString()}</small>
+                    <div class="ms-3">
+                        <strong class="${
+                          n.isRead ? "text-muted" : "text-dark"
+                        }">${n.message}</strong>
+                        <small class="text-muted d-block mt-1">
+                            ${new Date(n.createdAt).toLocaleString()}
+                        </small>
+                    </div>
                   </div>
-                  <div class="d-flex align-items-center">
+                  <div class="d-flex align-items-center flex-shrink-0">
                     ${
                       !n.isRead
-                        ? `<span class="badge bg-primary me-2">Mới</span>
-                         <button class="btn btn-sm btn-outline-info" onclick="markAsRead('${n._id}')">
-                            Đánh dấu đọc
+                        ? `<span class="badge bg-primary me-3 p-2">MỚI</span>
+                         <button class="btn btn-sm btn-outline-primary" onclick="markAsRead('${n._id}')">
+                            <i class="bi bi-check-lg"></i> Đã đọc
                          </button>`
-                        : `<span class="badge bg-secondary">Đã đọc</span>`
+                        : `<span class="badge bg-secondary p-2">Đã đọc</span>`
                     }
                   </div>
                 </div>
@@ -123,20 +142,8 @@
       async function markAsRead(id) {
         try {
           await PUT(`/notifications/${id}/read`, {});
-          const notiElement = document.getElementById(`noti-${id}`);
-          if (notiElement) {
-            // Cập nhật giao diện mà không cần reload toàn bộ
-            notiElement.classList.remove("bg-white", "border-primary");
-            notiElement.classList.add("list-group-item-light", "text-muted");
-
-            // Xóa nút "Đánh dấu đọc" và badge "Mới"
-            const newContent = notiElement.innerHTML.replace(
-              /<span class="badge bg-primary me-2">Mới<\/span>[\s\S]*?<\/button>/,
-              `<span class="badge bg-secondary">Đã đọc</span>`
-            );
-            notiElement.innerHTML = newContent;
-          }
-          // Tùy chọn: loadNotifications();
+          // Gọi lại loadNotifications để cập nhật giao diện toàn bộ (an toàn hơn)
+          loadNotifications();
         } catch (err) {
           alert("Lỗi đánh dấu đã đọc: " + err.message);
         }
@@ -151,13 +158,12 @@
           return;
         try {
           const notifications = await GET("/notifications/me");
-          // Gửi nhiều request PUT, có thể tối ưu bằng 1 API call nếu backend hỗ trợ
           const unreadIds = notifications
             .filter((n) => !n.isRead)
             .map((n) => n._id);
 
           for (const id of unreadIds) {
-            await markAsRead(id);
+            await PUT(`/notifications/${id}/read`, {}); // Gửi từng request
           }
           alert("Đã đánh dấu tất cả thông báo chưa đọc.");
           loadNotifications();

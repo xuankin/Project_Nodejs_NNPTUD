@@ -9,188 +9,373 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="../assets/css/style.css" />
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
+    <style>
+      :root {
+        --bs-border-radius: 0.5rem;
+      }
+      .table-product-image {
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+        border-radius: 4px;
+      }
+      .current-image-preview {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 5px;
+        position: relative;
+        background-color: #f8f9fa;
+      }
+    </style>
   </head>
   <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark" id="navbar"></nav>
     <div class="container my-5">
-      <h2>Quản lý Sản phẩm</h2>
+      <h2 class="mb-4 text-primary">
+        <i class="fas fa-boxes me-2"></i> Quản lý Sản phẩm
+      </h2>
       <button
-        class="btn btn-success mb-3"
+        class="btn btn-success mb-3 shadow-sm"
         data-bs-toggle="modal"
         data-bs-target="#productModal"
+        onclick="resetModal()"
       >
-        Thêm sản phẩm
+        <i class="fas fa-plus"></i> Thêm sản phẩm
       </button>
-      <table class="table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Tên</th>
-            <th>Giá</th>
-            <th>Kho</th>
-            <th>Hành động</th>
-          </tr>
-        </thead>
-        <tbody id="productTable"></tbody>
-      </table>
+      <div class="table-responsive shadow-sm rounded-3">
+        <table class="table table-striped table-hover align-middle">
+          <thead class="table-dark">
+            <tr>
+              <th>ID</th>
+              <th>Ảnh</th>
+              <th>Tên</th>
+              <th>Giá</th>
+              <th>Kho</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody id="productTable">
+            <tr>
+              <td colspan="6" class="text-center text-muted">
+                Đang tải dữ liệu...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <div class="modal fade" id="productModal">
       <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
+        <div class="modal-content rounded-4 shadow-lg">
+          <div class="modal-header bg-primary text-white rounded-top-4">
             <h5 id="modalTitle">Thêm sản phẩm</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
           </div>
           <div class="modal-body">
-            <form id="productForm">
+            <form id="productForm" class="row g-3">
               <input type="hidden" id="productId" />
-              <input
-                type="text"
-                class="form-control mb-2"
-                id="name"
-                placeholder="Tên"
-                required
-              />
-              <textarea
-                class="form-control mb-2"
-                id="description"
-                placeholder="Mô tả"
-              ></textarea>
-              <input
-                type="number"
-                class="form-control mb-2"
-                id="price"
-                placeholder="Giá"
-                required
-              />
-              <input
-                type="number"
-                class="form-control mb-2"
-                id="stock"
-                placeholder="Kho"
-                required
-              />
-              <select class="form-control mb-2" id="category"></select>
-              <input
-                type="file"
-                class="form-control mb-2"
-                id="images"
-                multiple
-                accept="image/*"
-              />
+              <div class="col-md-6">
+                <label for="name" class="form-label">Tên sản phẩm</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="name"
+                  placeholder="Điện thoại Samsung..."
+                  required
+                />
+              </div>
+              <div class="col-md-3">
+                <label for="price" class="form-label">Giá (VND)</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="price"
+                  placeholder="1000000"
+                  required
+                  min="0"
+                />
+              </div>
+              <div class="col-md-3">
+                <label for="stock" class="form-label">Tồn kho</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="stock"
+                  placeholder="0"
+                  required
+                  min="0"
+                />
+              </div>
+
+              <div class="col-12">
+                <label for="description" class="form-label"
+                  >Mô tả chi tiết</label
+                >
+                <textarea
+                  class="form-control"
+                  id="description"
+                  placeholder="Mô tả"
+                ></textarea>
+              </div>
+
+              <div class="col-md-6">
+                <label for="category" class="form-label">Danh mục</label>
+                <select class="form-select" id="category"></select>
+              </div>
+
+              <div class="col-12">
+                <label for="images" class="form-label"
+                  ><i class="fas fa-camera"></i> Tải lên ảnh (Chọn nhiều
+                  file)</label
+                >
+                <input
+                  type="file"
+                  class="form-control"
+                  id="images"
+                  multiple
+                  accept="image/*"
+                />
+              </div>
+
+              <div class="col-12">
+                <label class="form-label">Ảnh hiện tại</label>
+                <div
+                  id="currentImagesPreview"
+                  class="d-flex flex-wrap gap-3"
+                ></div>
+              </div>
             </form>
           </div>
           <div class="modal-footer">
-            <button class="btn btn-primary" onclick="saveProduct()">Lưu</button>
+            <button class="btn btn-secondary" data-bs-dismiss="modal">
+              <i class="fas fa-times"></i> Hủy
+            </button>
+            <button class="btn btn-primary" onclick="saveProduct()">
+              <i class="fas fa-save"></i> Lưu
+            </button>
           </div>
         </div>
       </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../assets/js/api.js"></script>
     <script src="../assets/js/auth.js"></script>
     <script>
-      if (getRole() !== "ADMIN") {
-        alert("Không có quyền!");
+      let currentProductsData = [];
+      let currentProduct = null;
+
+      if (getRole() !== "ADMIN" && getRole() !== "SELLER") {
+        alert("Bạn không có quyền quản lý sản phẩm!");
         window.location.href = "/";
       }
 
-      // Giả định hàm UPLOAD_SINGLE có sẵn từ file JS khác
-      // Chú ý: Bạn cần đảm bảo hàm UPLOAD_SINGLE đã được định nghĩa và import.
+      function resetModal() {
+        document.getElementById("productId").value = "";
+        document.getElementById("productForm").reset();
+        document.getElementById("modalTitle").textContent = "Thêm sản phẩm";
+        document.getElementById("currentImagesPreview").innerHTML = "";
+        currentProduct = null;
+      }
+
+      async function uploadSingleFile(file) {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await POST("/upload/single", formData);
+        return res; // Trả về { path: '/uploads/...' }
+      }
 
       async function loadProducts() {
-        const products = await GET("/products");
-        const categories = await GET("/categories");
-        document.getElementById("productTable").innerHTML = products
-          .map(
-            (p) => `
-        <tr>
-          <td>${p._id}</td>
-          <td>${p.name}</td>
-          <td>${p.price.toLocaleString()}đ</td>
-          <td>${p.stock}</td>
-          <td>
-            <button class="btn btn-sm btn-warning" onclick="editProduct('${
-              p._id
-            }')">Sửa</button>
-            <button class="btn btn-sm btn-danger" onclick="deleteProduct('${
-              p._id
-            }')">Xóa</button>
-          </td>
-        </tr>
-      `
-          )
-          .join("");
+        const tableBody = document.getElementById("productTable");
+        tableBody.innerHTML =
+          '<tr><td colspan="6" class="text-center text-primary"><i class="fas fa-spinner fa-spin"></i> Đang tải...</td></tr>';
 
-        const select = document.getElementById("category");
-        select.innerHTML = categories
-          .map((c) => `<option value="${c._id}">${c.name}</option>`)
-          .join("");
+        try {
+          const res = await GET("/products?limit=1000");
+          currentProductsData = res.products || [];
+          const categories = await GET("/categories");
+
+          tableBody.innerHTML = currentProductsData
+            .map(
+              (p) => `
+            <tr>
+              <td>${p._id.substring(0, 5)}...</td>
+              <td>
+                <img src="${
+                  p.images?.[0] || "/assets/img/no-image.png"
+                }" class="table-product-image">
+              </td>
+              <td>${p.name}</td>
+              <td class="fw-bold text-danger">${p.price.toLocaleString()}đ</td>
+              <td><span class="badge bg-primary fs-6">${
+                p.inventoryStock || 0
+              }</span></td> 
+              <td>
+                <button class="btn btn-sm btn-warning me-2 shadow-sm" onclick="editProduct('${
+                  p._id
+                }')"><i class="fas fa-edit"></i> Sửa</button>
+                <button class="btn btn-sm btn-danger shadow-sm" onclick="deleteProduct('${
+                  p._id
+                }')"><i class="fas fa-trash"></i> Xóa</button>
+              </td>
+            </tr>
+          `
+            )
+            .join("");
+
+          const select = document.getElementById("category");
+          select.innerHTML = categories
+            .map((c) => `<option value="${c._id}">${c.name}</option>`)
+            .join("");
+        } catch (err) {
+          tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Lỗi tải dữ liệu: ${err.message}</td></tr>`;
+        }
       }
 
       async function editProduct(id) {
-        const p = await GET(`/products/${id}`);
-        document.getElementById("productId").value = p._id;
-        document.getElementById("name").value = p.name;
-        document.getElementById("description").value = p.description;
-        document.getElementById("price").value = p.price;
-        document.getElementById("stock").value = p.stock;
-        document.getElementById("category").value = p.category._id;
-        new bootstrap.Modal(document.getElementById("productModal")).show();
+        resetModal();
+        document.getElementById("modalTitle").textContent = "Cập nhật sản phẩm";
+
+        try {
+          const p = await GET(`/products/${id}`);
+          currentProduct = p;
+
+          document.getElementById("productId").value = p._id;
+          document.getElementById("name").value = p.name;
+          document.getElementById("description").value = p.description;
+          document.getElementById("price").value = p.price;
+          // 🎯 SỬ DỤNG product.stock (cũ) cho modal để PUT API tính toán diff
+          document.getElementById("stock").value = p.stock;
+
+          document.getElementById("category").value =
+            p.category?._id || p.category;
+
+          const previewDiv = document.getElementById("currentImagesPreview");
+          previewDiv.innerHTML = (p.images || [])
+            .map(
+              (imgUrl) => `
+                <div class="current-image-preview">
+                    <img src="${imgUrl}" style="width: 70px; height: 70px; object-fit: cover; border-radius: 4px;">
+                    <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 p-0" 
+                            style="width: 20px; height: 20px; line-height: 1; font-size: 10px; border-radius: 50%;" 
+                            onclick="removeImage('${p._id}', '${imgUrl}')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `
+            )
+            .join("");
+
+          new bootstrap.Modal(document.getElementById("productModal")).show();
+        } catch (err) {
+          alert("Lỗi tải chi tiết sản phẩm: " + err.message);
+        }
+      }
+
+      async function removeImage(productId, imageUrl) {
+        if (!confirm("Bạn có chắc chắn muốn xóa ảnh này khỏi sản phẩm?"))
+          return;
+
+        try {
+          const product =
+            currentProduct || (await GET(`/products/${productId}`));
+
+          const updatedImages = (product.images || []).filter(
+            (img) => img !== imageUrl
+          );
+
+          await PUT(`/products/${productId}`, { images: updatedImages });
+
+          alert("Xóa ảnh thành công! Vui lòng mở lại hộp thoại Sửa.");
+
+          bootstrap.Modal.getInstance(
+            document.getElementById("productModal")
+          ).hide();
+          loadProducts();
+        } catch (err) {
+          alert("Lỗi xóa ảnh: " + err.message);
+        }
       }
 
       async function saveProduct() {
         const id = document.getElementById("productId").value;
-        const body = {
+
+        const currentImageElements = document.querySelectorAll(
+          "#currentImagesPreview img"
+        );
+        let finalImages = Array.from(currentImageElements).map((el) =>
+          el.getAttribute("src")
+        );
+
+        let body = {
           name: document.getElementById("name").value,
           description: document.getElementById("description").value,
           price: parseFloat(document.getElementById("price").value),
           stock: parseInt(document.getElementById("stock").value),
           category: document.getElementById("category").value,
-          images: [], // Khởi tạo mảng ảnh
+          images: finalImages,
         };
 
-        // 1. Nếu là UPDATE, giữ lại ảnh cũ
-        if (id) {
-          const existingProduct = await GET(`/products/${id}`);
-          body.images = existingProduct.images || [];
-        }
-
-        // 2. Upload và thêm ảnh mới
         const files = document.getElementById("images").files;
-        if (files.length > 0 && typeof UPLOAD_SINGLE === "function") {
-          for (let file of files) {
-            const formData = new FormData();
-            formData.append("file", file);
-            // 🎯 Giả định UPLOAD_SINGLE được định nghĩa trong file khác
-            const res = await UPLOAD_SINGLE(formData);
-            body.images.push(res.path);
+        if (files.length > 0) {
+          const uploadPromises = Array.from(files).map((file) =>
+            uploadSingleFile(file)
+          );
+
+          try {
+            const results = await Promise.all(uploadPromises);
+
+            results.forEach((res) => {
+              if (res && res.path) {
+                body.images.push(res.path);
+              }
+            });
+          } catch (uploadErr) {
+            alert("Lỗi khi upload ảnh: " + uploadErr.message);
+            return;
           }
         }
 
-        // 3. Thực hiện PUT hoặc POST
         try {
-          id
-            ? await PUT(`/products/${id}`, body)
-            : await POST("/products", body);
+          const apiCall = id
+            ? PUT(`/products/${id}`, body)
+            : POST("/products", body);
+
+          await apiCall;
+
           bootstrap.Modal.getInstance(
             document.getElementById("productModal")
           ).hide();
           loadProducts();
+          alert(`Sản phẩm ${id ? "cập nhật" : "thêm mới"} thành công!`);
         } catch (err) {
           alert("Lỗi: " + err.message);
         }
       }
 
       async function deleteProduct(id) {
-        if (confirm("Xóa sản phẩm?")) {
-          await DEL(`/products/${id}`);
-          loadProducts();
+        if (confirm("Xóa mềm sản phẩm này? (Kho cũng bị xóa mềm)")) {
+          try {
+            await DEL(`/products/${id}`);
+            loadProducts();
+            alert("Xóa mềm sản phẩm thành công!");
+          } catch (err) {
+            alert("Lỗi xóa: " + err.message);
+          }
         }
       }
 
-      loadProducts();
+      document.addEventListener("DOMContentLoaded", loadProducts);
     </script>
   </body>
 </html>

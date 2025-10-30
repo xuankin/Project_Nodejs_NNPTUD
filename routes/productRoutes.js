@@ -1,38 +1,213 @@
 // routes/productRoutes.js
 const express = require("express");
 const router = express.Router();
+const mongoose = require("mongoose");
 const Product = require("../schemas/product");
 const Inventory = require("../schemas/inventory");
+const Wishlist = require("../schemas/wishlist");
+const Review = require("../schemas/review");
 const { Authentication, Authorization } = require("../utils/authMiddleware");
 const { Response } = require("../utils/responseHandler");
 
-// LẤY DANH SÁCH
+// =======================================================
+// 📍 LẤY DANH SÁCH (PUBLIC/FRONTEND) - BỔ SUNG INVENTORY STOCK
+// =======================================================
 router.get("/", async (req, res) => {
   try {
-    const products = await Product.find({ isDeleted: false }).populate(
-      "category seller"
-    );
-    Response(res, 200, true, products);
+    const { page = 1, limit = 10, search, category, sort } = req.query;
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
+
+    const matchQuery = { isDeleted: false };
+    if (category) matchQuery.category = new mongoose.Types.ObjectId(category);
+    if (search) matchQuery.name = { $regex: search, $options: "i" };
+
+    const totalCount = await Product.countDocuments(matchQuery);
+
+    let sortStage = { $sort: { createdAt: -1 } };
+    if (sort === "price_asc") sortStage = { $sort: { price: 1 } };
+    if (sort === "price_desc") sortStage = { $sort: { price: -1 } };
+
+    // --- AGGREGATION PIPELINE ---
+    const pipeline = [
+      { $match: matchQuery },
+      sortStage,
+      { $skip: skip },
+      { $limit: limitNum },
+
+      // 🎯 0. Look up Inventory và tính toán currentStock (Sửa lỗi đồng bộ)
+      {
+        $lookup: {
+          from: "inventories",
+          localField: "_id",
+          foreignField: "product",
+          as: "inventoryData",
+        },
+      },
+      { $unwind: { path: "$inventoryData", preserveNullAndEmptyArrays: true } },
+      {
+        $addFields: {
+          inventoryStock: { $ifNull: ["$inventoryData.currentStock", 0] },
+        },
+      },
+
+      // 1. Look up Reviews (Giữ nguyên)
+      {
+        $lookup: {
+          from: "reviews",
+          localField: "_id",
+          foreignField: "product",
+          as: "reviews",
+        },
+      },
+      {
+        $addFields: {
+          avgRating: { $avg: "$reviews.rating" },
+          reviewCount: { $size: "$reviews" },
+        },
+      },
+
+      // 2. Look up Wishlist (Giữ nguyên)
+      {
+        $lookup: {
+          from: "wishlists",
+          localField: "_id",
+          foreignField: "products",
+          as: "wishlistEntries",
+        },
+      },
+      {
+        $addFields: {
+          wishlistCount: { $size: "$wishlistEntries" },
+        },
+      },
+
+      // 3. Populate Category and Seller (Giữ nguyên)
+      {
+        $lookup: {
+          from: "categories",
+          localField: "category",
+          foreignField: "_id",
+          as: "category",
+        },
+      },
+      { $unwind: { path: "$category", preserveNullAndEmptyArrays: true } },
+
+      {
+        $lookup: {
+          from: "users",
+          localField: "seller",
+          foreignField: "_id",
+          as: "seller",
+        },
+      },
+      { $unwind: { path: "$seller", preserveNullAndEmptyArrays: true } },
+
+      // 4. Project (Dọn dẹp)
+      {
+        $project: {
+          stock: 0, // Loại bỏ trường stock cũ
+          inventoryData: 0, // Loại bỏ dữ liệu Inventory thô
+          reviews: 0,
+          wishlistEntries: 0,
+          "seller.password": 0,
+          "seller.role": 0,
+          "seller.loginCount": 0,
+        },
+      },
+    ];
+
+    let products = await Product.aggregate(pipeline);
+
+    // 5. Kiểm tra User Liked Status (Giữ nguyên)
+    if (req.userId) {
+      const userWishlist = await Wishlist.findOne({
+        user: req.userId,
+        isDeleted: false,
+      });
+      const likedProductIds = userWishlist
+        ? userWishlist.products.map((id) => id.toString())
+        : [];
+
+      products = products.map((p) => ({
+        ...p,
+        userLiked: likedProductIds.includes(p._id.toString()),
+      }));
+    } else {
+      products = products.map((p) => ({ ...p, userLiked: false }));
+    }
+
+    Response(res, 200, true, {
+      products,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total: totalCount,
+        pages: Math.ceil(totalCount / limitNum),
+      },
+    });
   } catch (err) {
+    console.error("Lỗi list product:", err);
     Response(res, 500, false, err.message);
   }
 });
 
-// LẤY CHI TIẾT
+// =======================================================
+// 📍 LẤY CHI TIẾT (PUBLIC/ADMIN CRUD) - BỔ SUNG INVENTORY STOCK
+// =======================================================
 router.get("/:id", async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id).populate(
-      "category seller"
-    );
+    const productId = req.params.id;
+
+    // 🎯 LẤY THÊM DỮ LIỆU TỒN KHO TỪ INVENTORY
+    const [product, inventory, reviewStats, wishlistCount, userWishlist] =
+      await Promise.all([
+        Product.findById(productId).populate("category seller").lean(),
+        Inventory.findOne({ product: productId }).lean(), // Lấy tồn kho
+        Review.aggregate([
+          { $match: { product: new mongoose.Types.ObjectId(productId) } },
+          {
+            $group: {
+              _id: null,
+              avgRating: { $avg: "$rating" },
+              reviewCount: { $sum: 1 },
+            },
+          },
+        ]),
+        Wishlist.countDocuments({ products: productId, isDeleted: false }),
+        req.userId // Vẫn sử dụng req.userId nếu middleware chạy global
+          ? Wishlist.findOne({
+              user: req.userId,
+              products: productId,
+              isDeleted: false,
+            })
+          : Promise.resolve(null),
+      ]);
+
     if (!product || product.isDeleted)
       return Response(res, 404, false, "Sản phẩm không tồn tại");
-    Response(res, 200, true, product);
+
+    const finalProduct = {
+      ...product,
+      // 🎯 THAY THẾ stock BẰNG currentStock TỪ INVENTORY
+      stock: inventory?.currentStock || 0,
+      // Thêm thống kê
+      avgRating: reviewStats[0]?.avgRating || 0,
+      reviewCount: reviewStats[0]?.reviewCount || 0,
+      wishlistCount: wishlistCount,
+      userLiked: !!userWishlist,
+    };
+
+    Response(res, 200, true, finalProduct);
   } catch (err) {
     Response(res, 500, false, err.message);
   }
 });
 
-// THÊM SẢN PHẨM – KHÔNG DÙNG TRANSACTION
+// =======================================================
+// 📍 THÊM SẢN PHẨM (CRUD) - Giữ nguyên
+// =======================================================
 router.post(
   "/",
   Authentication,
@@ -46,14 +221,14 @@ router.post(
         name,
         description,
         price,
-        stock,
+        stock, // Lưu stock ban đầu vào product.stock (dùng cho update sau này)
         category,
         images,
         seller: req.userId,
       });
       await product.save();
 
-      // 2. Tạo kho (nếu lỗi → vẫn giữ sản phẩm)
+      // 2. Tạo kho
       try {
         const existingInv = await Inventory.findOne({ product: product._id });
         if (!existingInv) {
@@ -77,7 +252,9 @@ router.post(
   }
 );
 
-// CẬP NHẬT SẢN PHẨM – KHÔNG DÙNG TRANSACTION
+// =======================================================
+// 📍 CẬP NHẬT SẢN PHẨM (CRUD) - Giữ nguyên
+// =======================================================
 router.put(
   "/:id",
   Authentication,
@@ -118,8 +295,9 @@ router.put(
   }
 );
 
-// XÓA MỀM
-// XÓA MỀM
+// =======================================================
+// 📍 XÓA MỀM (CRUD) - Giữ nguyên
+// =======================================================
 router.delete(
   "/:id",
   Authentication,
@@ -132,12 +310,11 @@ router.delete(
       // 1. Xóa mềm sản phẩm
       await product.softDelete();
 
-      // 🎯 BỔ SUNG: Xóa mềm bản ghi Inventory liên quan
+      // 2. Xóa mềm bản ghi Inventory liên quan
       const inv = await Inventory.findOne({ product: req.params.id });
       if (inv) {
         await inv.softDelete();
       }
-      // 🎯 KẾT THÚC BỔ SUNG
 
       Response(res, 200, true, "Xóa thành công");
     } catch (err) {

@@ -9,25 +9,43 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="../assets/css/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+      .table-responsive {
+        border-radius: 0.5rem;
+      }
+      .status-select {
+        font-size: 0.9rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.3rem;
+      }
+    </style>
   </head>
   <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark" id="navbar"></nav>
     <div class="container my-5">
-      <h2>Quản lý Đơn hàng</h2>
-      <table class="table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Khách</th>
-            <th>Tổng tiền</th>
-            <th>Trạng thái</th>
-            <th>Ngày</th>
-            <th>Hành động</th>
-          </tr>
-        </thead>
-        <tbody id="orderTable"></tbody>
-      </table>
+      <h2 class="mb-4 text-primary">
+        <i class="fas fa-receipt me-2"></i> Quản lý Đơn hàng
+      </h2>
+      <div class="table-responsive shadow-sm">
+        <table class="table table-striped table-hover align-middle">
+          <thead class="table-dark">
+            <tr>
+              <th>ID</th>
+              <th>Khách</th>
+              <th>Tổng tiền</th>
+              <th>Trạng thái</th>
+              <th>Ngày</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody id="orderTable"></tbody>
+        </table>
+      </div>
     </div>
 
     <script src="../assets/js/api.js"></script>
@@ -42,16 +60,23 @@
         // API GET /orders trả về object { orders: [], pagination: {} }
         const data = await GET("/orders");
         const orders = Array.isArray(data) ? data : data.orders || [];
+        const tbody = document.getElementById("orderTable");
 
-        document.getElementById("orderTable").innerHTML = orders
+        if (orders.length === 0) {
+          tbody.innerHTML =
+            '<tr><td colspan="6" class="text-center py-4">Chưa có đơn hàng nào.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = orders
           .map(
             (o) => `
         <tr>
-          <td>${o._id}</td>
-          <td>${o.user?.fullName || "—"}</td>
-          <td>${o.finalAmount.toLocaleString()}đ</td>
+          <td>${o._id.substring(0, 8)}...</td>
+          <td class="fw-bold">${o.user?.fullName || "—"}</td>
+          <td class="text-danger fw-bold">${o.finalAmount.toLocaleString()}đ</td>
           <td>
-            <select class="form-control" onchange="updateOrderStatus('${
+            <select class="form-select status-select" onchange="updateOrderStatus('${
               o._id
             }', this.value)">
               ${["Pending", "Confirmed", "Shipping", "Delivered", "Cancelled"]
@@ -66,9 +91,12 @@
           </td>
           <td>${new Date(o.createdAt).toLocaleDateString()}</td>
           <td>
-            <button class="btn btn-sm btn-danger" onclick="cancelOrder('${
+            <button class="btn btn-sm btn-outline-info me-2" onclick="viewOrderDetails('${
               o._id
-            }')">Hủy</button>
+            }')"><i class="fas fa-eye"></i> Chi tiết</button>
+            <button class="btn btn-sm btn-danger shadow-sm" onclick="cancelOrder('${
+              o._id
+            }')"><i class="fas fa-trash-alt"></i> Hủy</button>
           </td>
         </tr>
       `
@@ -78,7 +106,6 @@
 
       async function updateOrderStatus(id, status) {
         try {
-          // Endpoint: PUT /orders/:id/status
           await PUT(`/orders/${id}/status`, { status });
           alert("Cập nhật trạng thái thành công!");
         } catch (err) {
@@ -86,12 +113,16 @@
         }
       }
 
+      async function viewOrderDetails(id) {
+        // Chưa có trang chi tiết, chuyển hướng đến orders.html để tìm kiếm nếu cần
+        window.location.href = `/admin/orders.html?id=${id}`;
+      }
+
       async function cancelOrder(id) {
         if (
           confirm("Hủy đơn hàng này? Việc này sẽ hoàn lại sản phẩm vào kho.")
         ) {
           try {
-            // Endpoint: POST /orders/:id/cancel
             await POST(`/orders/${id}/cancel`, { reason: "Admin hủy" });
             alert("Hủy đơn thành công và hoàn kho!");
             loadOrders();

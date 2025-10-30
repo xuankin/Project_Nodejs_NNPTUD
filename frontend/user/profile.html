@@ -9,6 +9,10 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="../assets/css/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
+    />
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   </head>
   <body>
@@ -17,13 +21,38 @@
       id="navbar"
     ></nav>
     <div class="container my-5">
-      <h2>Thông tin tài khoản</h2>
-      <div class="card shadow-sm">
-        <div class="card-body">
-          <p><strong>Họ tên:</strong> <span id="userFullName"></span></p>
-          <p><strong>Email:</strong> <span id="userEmail"></span></p>
-          <p><strong>Role:</strong> <span id="userRole"></span></p>
-          <button class="btn btn-warning mt-3">Cập nhật thông tin</button>
+      <h2 class="mb-4 text-primary">
+        <i class="bi bi-person-circle"></i> Thông tin tài khoản
+      </h2>
+      <div class="card shadow-lg rounded-3">
+        <div class="card-body p-4">
+          <form id="profileForm">
+            <div class="mb-3">
+              <label for="fullName" class="form-label fw-bold">Họ tên:</label>
+              <input type="text" class="form-control" id="fullName" disabled />
+            </div>
+            <div class="mb-3">
+              <label for="email" class="form-label fw-bold">Email:</label>
+              <input type="email" class="form-control" id="email" disabled />
+            </div>
+            <div class="mb-3">
+              <label for="role" class="form-label fw-bold">Vai trò:</label>
+              <input type="text" class="form-control" id="role" disabled />
+            </div>
+
+            <p class="text-muted small mt-4">
+              Để thay đổi mật khẩu hoặc thông tin khác, vui lòng liên hệ Admin.
+            </p>
+
+            <button
+              type="submit"
+              class="btn btn-warning mt-3 shadow-sm"
+              disabled
+            >
+              <i class="bi bi-pencil-square"></i> Cập nhật thông tin (Chưa kích
+              hoạt)
+            </button>
+          </form>
         </div>
       </div>
     </div>
@@ -35,11 +64,10 @@
 
       async function loadProfile() {
         try {
-          // Giả định API GET /users/me đã được định nghĩa
           const user = await GET("/users/me");
-          document.getElementById("userFullName").textContent = user.fullName;
-          document.getElementById("userEmail").textContent = user.email;
-          document.getElementById("userRole").textContent = user.role.name;
+          document.getElementById("fullName").value = user.fullName || "";
+          document.getElementById("email").value = user.email || "";
+          document.getElementById("role").value = user.role?.name || "N/A";
         } catch (err) {
           alert("Lỗi tải thông tin cá nhân: " + err.message);
         }
