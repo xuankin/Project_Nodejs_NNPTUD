@@ -15,16 +15,85 @@
       class="navbar navbar-expand-lg navbar-dark bg-primary"
       id="navbar"
     ></nav>
+
     <div class="container my-5">
       <h2 class="text-center mb-4">Sản phẩm nổi bật</h2>
-      <div class="row" id="products"></div>
+      <div class="row" id="products">
+        <div class="col-12 text-center py-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Đang tải...</span>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script src="assets/js/api.js"></script>
     <script src="assets/js/auth.js"></script>
-    <script src="assets/js/user.js"></script>
+
     <script>
-      loadProducts();
+      async function loadProducts() {
+        try {
+          const products = await GET("/products"); // Endpoint: GET /products
+          const container = document.getElementById("products");
+          if (!products || products.length === 0) {
+            container.innerHTML = `<div class="col-12 text-center py-5 text-muted">Chưa có sản phẩm.</div>`;
+            return;
+          }
+
+          container.innerHTML = products
+            .map(
+              (p) => `
+            <div class="col-md-4 mb-4">
+              <div class="card h-100 shadow-sm">
+                <img src="${p.images?.[0] || "/assets/img/no-image.png"}" 
+                     class="card-img-top" style="height:200px; object-fit:cover;">
+                <div class="card-body d-flex flex-column">
+                  <h5 class="card-title">${p.name}</h5>
+                  <p class="text-danger fw-bold">${p.price.toLocaleString()}đ</p>
+                  <div class="mt-auto d-flex gap-2">
+                    <a href="/user/product-detail.html?id=${p._id}" 
+                       class="btn btn-outline-primary flex-fill">Chi tiết</a>
+                    <button class="btn btn-success" onclick="addToCart('${
+                      p._id
+                    }')">Giỏ</button>
+                    <button class="btn btn-outline-danger" onclick="addToWishlist('${
+                      p._id
+                    }')">Yêu thích</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `
+            )
+            .join("");
+        } catch (err) {
+          alert("Lỗi tải sản phẩm: " + err.message);
+        }
+      }
+
+      async function addToCart(productId) {
+        if (!isLoggedIn()) return (window.location.href = "/login.html");
+        try {
+          // Endpoint: POST /carts
+          await POST("/carts", { product: productId, quantity: 1 });
+          alert("Thêm vào giỏ thành công!");
+        } catch (err) {
+          alert("Lỗi: " + err.message);
+        }
+      }
+
+      async function addToWishlist(productId) {
+        if (!isLoggedIn()) return (window.location.href = "/login.html");
+        try {
+          // SỬA LỖI ENDPOINT: POST /wishlists
+          await POST("/wishlists", { product: productId });
+          alert("Thêm yêu thích thành công!");
+        } catch (err) {
+          alert("Lỗi: " + err.message);
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", loadProducts);
     </script>
   </body>
 </html>

@@ -13,8 +13,7 @@ router.get("/", Authentication, Authorization("ADMIN"), async (req, res) => {
     Response(res, 500, false, err.message);
   }
 });
-
-// 📍 Cập nhật tồn kho
+// Cập nhật kho thủ công (ADMIN)
 router.put(
   "/:productId",
   Authentication,
@@ -22,15 +21,14 @@ router.put(
   async (req, res) => {
     try {
       let inv = await Inventory.findOne({ product: req.params.productId });
-      if (!inv)
+      if (!inv) {
         inv = new Inventory({ product: req.params.productId, currentStock: 0 });
-
+      }
       inv.quantityIn += req.body.quantityIn || 0;
       inv.quantityOut += req.body.quantityOut || 0;
       inv.currentStock +=
         (req.body.quantityIn || 0) - (req.body.quantityOut || 0);
       await inv.save();
-
       Response(res, 200, true, "Cập nhật tồn kho thành công");
     } catch (err) {
       Response(res, 500, false, err.message);

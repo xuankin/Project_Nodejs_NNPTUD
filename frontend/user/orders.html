@@ -13,7 +13,6 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
     />
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   </head>
   <body>
     <nav
@@ -42,34 +41,55 @@
       if (!isLoggedIn()) window.location.href = "/login.html";
 
       async function loadOrders() {
-        const data = await GET("/orders/me");
-        const tbody = document.querySelector("#orderTable tbody");
-        tbody.innerHTML =
-          data.orders
-            .map(
-              (o) => `
-        <tr>
-          <td>${o._id}</td>
-          <td>${o.finalAmount.toLocaleString()}đ</td>
-          <td><span class="badge bg-${
-            o.status === "Delivered" ? "success" : "warning"
-          }">${o.status}</span></td>
-          <td>${new Date(o.createdAt).toLocaleDateString()}</td>
-          <td><button class="btn btn-sm btn-danger" onclick="cancelOrder('${
-            o._id
-          }')">Hủy</button></td>
-        </tr>
-      `
-            )
-            .join("") ||
-          "<tr><td colspan='5' class='text-center'>Chưa có đơn hàng</td></tr>";
+        try {
+          const data = await GET("/orders/me");
+          const tbody = document.querySelector("#orderTable tbody");
+          tbody.innerHTML =
+            data.orders
+              .map(
+                (o) => `
+            <tr>
+              <td>${o._id}</td>
+              <td>${o.finalAmount.toLocaleString()}đ</td>
+              <td><span class="badge bg-${
+                o.status === "Delivered" ? "success" : "warning"
+              }">${o.status}</span></td>
+              <td>${new Date(o.createdAt).toLocaleDateString()}</td>
+              <td><button class="btn btn-sm btn-danger" onclick="cancelOrder('${
+                o._id
+              }')">Hủy</button></td>
+            </tr>
+          `
+              )
+              .join("") ||
+            "<tr><td colspan='5' class='text-center'>Chưa có đơn hàng</td></tr>";
+        } catch (err) {
+          alert("Lỗi tải đơn hàng: " + err.message);
+        }
       }
 
+      // Thay thế hàm cancelOrder(id) trong orders.html
+
       async function cancelOrder(id) {
-        const reason = prompt("Lý do hủy:");
-        await POST(`/orders/${id}/cancel`, { reason });
-        alert("Hủy thành công!");
-        loadOrders();
+        if (
+          !confirm(
+            "Bạn có chắc chắn muốn hủy đơn hàng này? Việc hủy sẽ hoàn lại sản phẩm vào kho."
+          )
+        )
+          return;
+        const reason = prompt("Lý do hủy (Không bắt buộc):");
+
+        try {
+          // Endpoint: POST /orders/:id/cancel
+          await POST(`/orders/${id}/cancel`, { reason });
+          alert("Hủy thành công! Kho đã được hoàn lại.");
+          loadOrders();
+        } catch (err) {
+          alert(
+            "Lỗi hủy đơn: " +
+              (err.message || "Đơn hàng này không thể hủy được nữa.")
+          );
+        }
       }
 
       loadOrders();

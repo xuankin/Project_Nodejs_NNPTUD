@@ -1,20 +1,24 @@
+// routes/productRoutes.js
 const express = require("express");
 const router = express.Router();
 const Product = require("../schemas/product");
+const Inventory = require("../schemas/inventory");
 const { Authentication, Authorization } = require("../utils/authMiddleware");
 const { Response } = require("../utils/responseHandler");
 
-// 📍 Lấy danh sách sản phẩm (mọi người đều xem được)
+// LẤY DANH SÁCH
 router.get("/", async (req, res) => {
   try {
-    const products = await Product.find().populate("category seller");
+    const products = await Product.find({ isDeleted: false }).populate(
+      "category seller"
+    );
     Response(res, 200, true, products);
   } catch (err) {
     Response(res, 500, false, err.message);
   }
 });
 
-// 📍 Lấy chi tiết sản phẩm
+// LẤY CHI TIẾT
 router.get("/:id", async (req, res) => {
   try {
     const product = await Product.findById(req.params.id).populate(
@@ -28,7 +32,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// 📍 Thêm sản phẩm (ADMIN, SELLER)
+// THÊM SẢN PHẨM – KHÔNG DÙNG TRANSACTION
 router.post(
   "/",
   Authentication,
@@ -36,6 +40,8 @@ router.post(
   async (req, res) => {
     try {
       const { name, description, price, stock, category, images } = req.body;
+
+      // 1. Tạo sản phẩm
       const product = new Product({
         name,
         description,
@@ -46,14 +52,32 @@ router.post(
         seller: req.userId,
       });
       await product.save();
+
+      // 2. Tạo kho (nếu lỗi → vẫn giữ sản phẩm)
+      try {
+        const existingInv = await Inventory.findOne({ product: product._id });
+        if (!existingInv) {
+          const inventory = new Inventory({
+            product: product._id,
+            currentStock: stock || 0,
+            quantityIn: stock || 0,
+            quantityOut: 0,
+          });
+          await inventory.save();
+        }
+      } catch (invErr) {
+        console.warn("Tạo kho thất bại:", invErr.message);
+      }
+
       Response(res, 201, true, "Tạo sản phẩm thành công");
     } catch (err) {
+      console.error("Lỗi tạo sản phẩm:", err);
       Response(res, 500, false, err.message);
     }
   }
 );
 
-// 📍 Cập nhật sản phẩm (ADMIN, SELLER)
+// CẬP NHẬT SẢN PHẨM – KHÔNG DÙNG TRANSACTION
 router.put(
   "/:id",
   Authentication,
@@ -62,18 +86,39 @@ router.put(
     try {
       const product = await Product.findById(req.params.id);
       if (!product || product.isDeleted)
-        return Response(res, 404, false, "Không tìm thấy sản phẩm");
+        return Response(res, 404, false, "Không tìm thấy");
 
+      const oldStock = product.stock;
       Object.assign(product, req.body);
       await product.save();
-      Response(res, 200, true, "Cập nhật sản phẩm thành công");
+
+      // Đồng bộ kho nếu stock thay đổi
+      if (req.body.stock !== undefined && req.body.stock !== oldStock) {
+        let inv = await Inventory.findOne({ product: product._id });
+        if (!inv) {
+          inv = new Inventory({
+            product: product._id,
+            currentStock: 0,
+            quantityIn: 0,
+            quantityOut: 0,
+          });
+        }
+        const diff = (req.body.stock || 0) - (oldStock || 0);
+        inv.currentStock += diff;
+        inv.quantityIn += diff > 0 ? diff : 0;
+        inv.quantityOut += diff < 0 ? Math.abs(diff) : 0;
+        await inv.save();
+      }
+
+      Response(res, 200, true, "Cập nhật thành công");
     } catch (err) {
+      console.error("Lỗi cập nhật:", err);
       Response(res, 500, false, err.message);
     }
   }
 );
 
-// 📍 Xóa mềm sản phẩm
+// XÓA MỀM
 router.delete(
   "/:id",
   Authentication,
@@ -81,10 +126,9 @@ router.delete(
   async (req, res) => {
     try {
       const product = await Product.findById(req.params.id);
-      if (!product) return Response(res, 404, false, "Không tìm thấy sản phẩm");
-
+      if (!product) return Response(res, 404, false, "Không tìm thấy");
       await product.softDelete();
-      Response(res, 200, true, "Xóa sản phẩm thành công");
+      Response(res, 200, true, "Xóa thành công");
     } catch (err) {
       Response(res, 500, false, err.message);
     }

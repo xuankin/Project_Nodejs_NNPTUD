@@ -6,7 +6,8 @@ const orderSchema = new mongoose.Schema(
     // Người dùng đặt hàng
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      // 🎯 SỬA: Dùng tên model viết thường (user)
+      ref: "user",
       required: true,
     },
 
@@ -15,7 +16,8 @@ const orderSchema = new mongoose.Schema(
       {
         product: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: "Product",
+          // 🎯 SỬA: Dùng tên model viết thường (product)
+          ref: "product",
           required: true,
         },
         quantity: { type: Number, required: true, min: 1 },
@@ -35,7 +37,8 @@ const orderSchema = new mongoose.Schema(
     // Mã giảm giá áp dụng (nếu có)
     coupon: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Coupon",
+      // 🎯 SỬA: Dùng tên model viết thường (coupon)
+      ref: "coupon",
       default: null,
     },
 
@@ -61,10 +64,8 @@ const orderSchema = new mongoose.Schema(
   }
 );
 
-// Plugin xóa mềm (giúp không xóa vĩnh viễn)
 orderSchema.plugin(softDelete);
-
-// Tạo index để query nhanh theo người dùng và trạng thái
 orderSchema.index({ user: 1, status: 1, createdAt: -1 });
 
-module.exports = mongoose.model("Order", orderSchema);
+// 🎯 SỬA: Export tên model thành "order" (chữ thường) để thống nhất
+module.exports = mongoose.model("order", orderSchema);

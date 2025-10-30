@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Quản lý Thông báo - Admin</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../assets/css/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
+    />
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-expand-lg navbar-dark bg-primary"
+      id="navbar"
+    ></nav>
+    <div class="container my-5">
+      <h2>📢 Gửi Thông báo</h2>
+
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <form id="notificationForm">
+            <div class="mb-3">
+              <label for="recipient" class="form-label">Người nhận</label>
+              <select class="form-select" id="recipientId" required>
+                <option value="ALL">Tất cả người dùng</option>
+              </select>
+              <small class="form-text text-muted"
+                >Chọn 'Tất cả người dùng' hoặc một ID User cụ thể.</small
+              >
+            </div>
+
+            <div class="mb-3">
+              <label for="type" class="form-label">Loại thông báo</label>
+              <select class="form-select" id="type" required>
+                <option value="System">Hệ thống (System)</option>
+                <option value="Order">Đơn hàng (Order)</option>
+                <option value="Promotion">Khuyến mãi (Promotion)</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="message" class="form-label">Nội dung thông báo</label>
+              <textarea
+                class="form-control"
+                id="message"
+                rows="3"
+                required
+              ></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Gửi Thông báo</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script src="../assets/js/api.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/admin.js"></script>
+    <script>
+      if (!isLoggedIn() || getRole() !== "ADMIN") window.location.href = "/";
+
+      async function loadUsersForRecipient() {
+        try {
+          // Lấy danh sách users (Admin cần route GET /users)
+          const users = await GET("/users");
+          const select = document.getElementById("recipientId");
+
+          // Giữ lại option ALL
+          select.innerHTML = '<option value="ALL">Tất cả người dùng</option>';
+
+          users.forEach((user) => {
+            const option = document.createElement("option");
+            option.value = user._id;
+            option.textContent = `${user.fullName} (${user.email}) - ID: ${user._id}`;
+            select.appendChild(option);
+          });
+        } catch (err) {
+          console.error("Lỗi tải danh sách người dùng:", err);
+        }
+      }
+
+      document.getElementById("notificationForm").onsubmit = async (e) => {
+        e.preventDefault();
+
+        const recipientId = document.getElementById("recipientId").value;
+        const type = document.getElementById("type").value;
+        const message = document.getElementById("message").value.trim();
+
+        try {
+          const body = { message, type, recipientId };
+          // Endpoint: POST /notifications
+          await POST("/notifications", body);
+
+          alert(
+            `Thông báo đã được gửi thành công đến: ${
+              recipientId === "ALL" ? "Tất cả" : "Người dùng ID: " + recipientId
+            }`
+          );
+          document.getElementById("notificationForm").reset();
+        } catch (err) {
+          alert("Lỗi gửi thông báo: " + err.message);
+        }
+      };
+
+      document.addEventListener("DOMContentLoaded", loadUsersForRecipient);
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

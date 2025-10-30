@@ -20,7 +20,8 @@
           <tr>
             <th>Sản phẩm</th>
             <th>Tồn kho</th>
-            <th>Hành động</th>
+            <th>Nhập</th>
+            <th>Xuất</th>
           </tr>
         </thead>
         <tbody id="inventoryTable"></tbody>
@@ -30,31 +31,50 @@
     <script src="../assets/js/api.js"></script>
     <script src="../assets/js/auth.js"></script>
     <script>
-      async function loadInventory() {
-        const inventories = await GET("/inventories");
-        document.getElementById("inventoryTable").innerHTML = inventories
-          .map(
-            (i) => `
-        <tr>
-          <td>${i.product.name}</td>
-          <td>${i.currentStock}</td>
-          <td>
-            <button class="btn btn-sm btn-warning" onclick="updateInventory('${i.product._id}')">Cập nhật</button>
-          </td>
-        </tr>
-      `
-          )
-          .join("");
+      if (getRole() !== "ADMIN") {
+        alert("Bạn không có quyền!");
+        window.location.href = "/";
       }
 
-      async function updateInventory(productId) {
-        const quantityIn = prompt("Nhập số lượng nhập kho:");
-        const quantityOut = prompt("Nhập số lượng xuất kho:");
-        await PUT(`/inventory/${productId}`, {
-          quantityIn: parseInt(quantityIn),
-          quantityOut: parseInt(quantityOut),
-        });
-        alert("Cập nhật thành công!");
+      async function loadInventory() {
+        try {
+          const inventories = await GET("/inventories"); // API trả từ inventoryRoutes.js
+          document.getElementById("inventoryTable").innerHTML = inventories
+            .map(
+              (i) => `
+          <tr>
+            <td>${i.product.name}</td>
+            <td><strong>${i.currentStock}</strong></td>
+            <td>
+              <button class="btn btn-sm btn-success" onclick="addStock('${i.product._id}')">
+                Nhập
+              </button>
+            </td>
+            <td>
+              <button class="btn btn-sm btn-warning" onclick="removeStock('${i.product._id}')">
+                Xuất
+              </button>
+            </td>
+          </tr>
+        `
+            )
+            .join("");
+        } catch (err) {
+          alert("Lỗi: " + err.message);
+        }
+      }
+
+      async function addStock(productId) {
+        const qty = prompt("Nhập số lượng nhập kho:");
+        if (!qty || qty <= 0) return alert("Số lượng không hợp lệ");
+        await PUT(`/inventories/${productId}`, { quantityIn: parseInt(qty) });
+        loadInventory();
+      }
+
+      async function removeStock(productId) {
+        const qty = prompt("Nhập số lượng xuất kho:");
+        if (!qty || qty <= 0) return alert("Số lượng không hợp lệ");
+        await PUT(`/inventories/${productId}`, { quantityOut: parseInt(qty) });
         loadInventory();
       }
 

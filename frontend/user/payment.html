@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <body>
+    <script src="../assets/js/api.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script>
+      if (!isLoggedIn()) window.location.href = "/login.html";
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const orderId = urlParams.get("orderId");
+
+      async function loadOrder() {
+        if (!orderId) return alert("Không có ID đơn hàng!");
+        try {
+          const order = await GET(`/orders/${orderId}`);
+          document.getElementById(
+            "orderId"
+          ).textContent = `Mã đơn: ${order._id}`;
+          document.getElementById(
+            "finalAmount"
+          ).textContent = `Tổng tiền: ${order.finalAmount.toLocaleString()}đ`;
+
+          // 🎯 CHỈNH SỬA: Đồng bộ phương thức thanh toán đã chọn
+          const paymentMethodSelect = document.getElementById("paymentMethod");
+          if (order.paymentMethod) {
+            paymentMethodSelect.value = order.paymentMethod;
+          }
+        } catch (err) {
+          alert("Lỗi tải đơn hàng: " + err.message);
+        }
+      }
+
+      async function confirmPayment() {
+        const method = document.getElementById("paymentMethod").value;
+        const amount = parseFloat(
+          document
+            .getElementById("finalAmount")
+            .textContent.replace(/[^\d]/g, "")
+        );
+        try {
+          // Endpoint: POST /payments
+          await POST("/payments", {
+            order: orderId,
+            method,
+            amount,
+          });
+          alert("Thanh toán thành công!");
+          window.location.href = "/user/orders.html";
+        } catch (err) {
+          alert("Thanh toán thất bại: " + err.message);
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", loadOrder);
+    </script>
+  </body>
+</html>
