@@ -18,6 +18,11 @@
             <div class="card-body p-5">
               <h3 class="text-center mb-4">Đăng ký tài khoản</h3>
               <form id="registerForm">
+                <div
+                  id="registerError"
+                  class="alert alert-danger"
+                  style="display: none"
+                ></div>
                 <input
                   type="text"
                   class="form-control mb-3"
@@ -60,6 +65,9 @@
     <script>
       document.getElementById("registerForm").onsubmit = async (e) => {
         e.preventDefault();
+        const errorEl = document.getElementById("registerError");
+        errorEl.style.display = "none";
+
         const body = {
           username: document.getElementById("username").value,
           email: document.getElementById("email").value,
@@ -67,10 +75,17 @@
           password: document.getElementById("password").value,
           role: "USER",
         };
-        const data = await POST("/auth/register", body);
-        if (data) {
+
+        try {
+          await POST("/auth/register", body);
           alert("Đăng ký thành công! Vui lòng đăng nhập.");
           window.location.href = "/login.html";
+        } catch (error) {
+          // Xử lý lỗi từ API (ví dụ: username đã tồn tại)
+          const errorMessage = error.message || "Lỗi đăng ký không xác định.";
+          errorEl.textContent = errorMessage;
+          errorEl.style.display = "block";
+          console.error("Registration Failed:", error);
         }
       };
     </script>

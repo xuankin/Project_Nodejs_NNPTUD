@@ -175,6 +175,9 @@
       let currentProductsData = [];
       let currentProduct = null;
 
+      // 🚨 KHAI BÁO CỤC BỘ ĐỂ SỬ DỤNG TRONG FETCH FILE UPLOAD
+      // const API_URL = "http://localhost:3000";
+
       if (getRole() !== "ADMIN" && getRole() !== "SELLER") {
         alert("Bạn không có quyền quản lý sản phẩm!");
         window.location.href = "/";
@@ -188,11 +191,41 @@
         currentProduct = null;
       }
 
+      /**
+       * 🎯 HÀM UPLOAD ĐỘC LẬP: Sử dụng fetch thuần túy
+       * Trả về { path: '/uploads/...' }
+       */
       async function uploadSingleFile(file) {
         const formData = new FormData();
         formData.append("file", file);
-        const res = await POST("/upload/single", formData);
-        return res; // Trả về { path: '/uploads/...' }
+
+        const token = localStorage.getItem("token");
+        const headers = {};
+        if (token) {
+          // Chỉ cần Authorization header
+          headers["Authorization"] = `Bearer ${token}`;
+        }
+
+        try {
+          // Sử dụng fetch trực tiếp: KHÔNG CẦN Content-Type
+          const response = await fetch(API_URL + "/upload/single", {
+            method: "POST",
+            headers: headers,
+            body: formData, // Trình duyệt tự đặt Content-Type: multipart/form-data
+          });
+
+          const data = await response.json();
+
+          if (!response.ok || !data.success || !data.path) {
+            // Ném lỗi nếu status không phải 2xx HOẶC path là null/undefined
+            throw new Error(data.message || "Upload file thất bại.");
+          }
+
+          return data;
+        } catch (err) {
+          console.error("Native Upload Error:", err);
+          throw err;
+        }
       }
 
       async function loadProducts() {
@@ -254,7 +287,6 @@
           document.getElementById("name").value = p.name;
           document.getElementById("description").value = p.description;
           document.getElementById("price").value = p.price;
-          // 🎯 SỬ DỤNG product.stock (cũ) cho modal để PUT API tính toán diff
           document.getElementById("stock").value = p.stock;
 
           document.getElementById("category").value =
@@ -336,6 +368,7 @@
             const results = await Promise.all(uploadPromises);
 
             results.forEach((res) => {
+              // 🚨 LƯU Ý: Chỉ thêm vào finalImages nếu path tồn tại
               if (res && res.path) {
                 body.images.push(res.path);
               }

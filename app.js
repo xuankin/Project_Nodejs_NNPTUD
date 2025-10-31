@@ -1,9 +1,13 @@
+// app.js
+
 var createError = require("http-errors");
 var express = require("express");
 var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 let mongoose = require("mongoose");
+// 🚨 BƯỚC SỬA LỖI: Tải biến từ file .env vào process.env
+require("dotenv").config();
 
 // =======================
 // DATABASE CONNECTION

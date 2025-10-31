@@ -1,3 +1,4 @@
+// routes/upload.js
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
@@ -33,23 +34,47 @@ const upload = multer({
 });
 
 // Upload single -> trả về path public
-router.post("/single", upload.single("file"), (req, res) => {
-  try {
-    const filePath = `/uploads/${req.file.filename}`;
-    res.json({ success: true, path: filePath, filename: req.file.filename });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
+router.post("/single", (req, res) => {
+  upload.single("file")(req, res, (err) => {
+    try {
+      if (err instanceof multer.MulterError) {
+        return res.status(400).json({ success: false, message: err.message });
+      } else if (err) {
+        return res.status(400).json({ success: false, message: err.message });
+      }
+
+      // 🚨 KIỂM TRA ĐỂ TRẢ VỀ PATH: null AN TOÀN
+      if (!req.file) {
+        return res.json({ success: true, path: null, filename: null });
+      }
+
+      // ✅ FILE ĐÃ ĐƯỢC LƯU VÀO uploadPath
+      const filePath = `/uploads/${req.file.filename}`;
+      res.json({ success: true, path: filePath, filename: req.file.filename });
+    } catch (tryErr) {
+      console.error("Upload handler error:", tryErr);
+      res
+        .status(500)
+        .json({ success: false, message: "Lỗi server nội bộ khi xử lý file." });
+    }
+  });
 });
 
 // Upload multiple -> trả về mảng paths
-router.post("/multiple", upload.array("files", 10), (req, res) => {
-  try {
-    const paths = req.files.map((f) => `/uploads/${f.filename}`);
-    res.json({ success: true, paths });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
+router.post("/multiple", (req, res) => {
+  upload.array("files", 10)(req, res, (err) => {
+    try {
+      if (err) {
+        return res.status(400).json({ success: false, message: err.message });
+      }
+
+      const paths = (req.files || []).map((f) => `/uploads/${f.filename}`);
+      res.json({ success: true, paths });
+    } catch (tryErr) {
+      console.error("Upload handler error:", tryErr);
+      res.status(500).json({ success: false, message: "Lỗi server nội bộ." });
+    }
+  });
 });
 
 module.exports = router;

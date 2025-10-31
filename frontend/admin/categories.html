@@ -2,58 +2,72 @@
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Quản lý Danh mục - Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin - Quản lý Danh mục</title>
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="../assets/css/style.css" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
     />
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <style>
-      .table-responsive {
-        border-radius: 0.5rem;
-      }
-    </style>
+    <link rel="stylesheet" href="../assets/css/style.css" />
   </head>
   <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark" id="navbar"></nav>
-    <div class="container my-5">
-      <h2 class="mb-4 text-primary">
-        <i class="fas fa-tags me-2"></i> Quản lý Danh mục
+
+    <div class="container my-4">
+      <h2 class="text-dark mb-4">
+        <i class="fas fa-list-alt me-2"></i> Quản lý Danh mục Sản phẩm
       </h2>
+
       <button
-        class="btn btn-success mb-3 shadow-sm"
+        class="btn btn-primary mb-3"
         data-bs-toggle="modal"
         data-bs-target="#categoryModal"
-        onclick="resetCategoryForm()"
+        onclick="resetForm()"
       >
-        <i class="fas fa-plus"></i> Thêm danh mục
+        <i class="fas fa-plus me-1"></i> Thêm Danh mục
       </button>
-      <div class="table-responsive shadow-sm">
-        <table class="table table-striped table-hover align-middle">
-          <thead class="table-dark">
-            <tr>
-              <th>Tên</th>
-              <th>Mô tả</th>
-              <th>Cha</th>
-              <th>Hành động</th>
-            </tr>
-          </thead>
-          <tbody id="categoryTable"></tbody>
-        </table>
+
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <table class="table table-striped" id="categoryTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Tên Danh mục</th>
+                <th>Danh mục cha</th>
+                <th>Mô tả</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody id="categoryList">
+              <tr>
+                <td colspan="5" class="text-center text-muted">
+                  Đang tải dữ liệu...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <div class="modal fade" id="categoryModal">
+    <div
+      class="modal fade"
+      id="categoryModal"
+      tabindex="-1"
+      aria-labelledby="categoryModalLabel"
+      aria-hidden="true"
+    >
       <div class="modal-dialog">
-        <div class="modal-content rounded-4 shadow-lg">
-          <div class="modal-header bg-primary text-white rounded-top-4">
-            <h5 id="modalTitle">Thêm danh mục</h5>
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title" id="categoryModalLabel">
+              Tạo Danh mục mới
+            </h5>
             <button
               type="button"
               class="btn-close btn-close-white"
@@ -63,146 +77,258 @@
           </div>
           <div class="modal-body">
             <form id="categoryForm">
-              <input type="hidden" id="categoryId" />
-              <input
-                type="text"
-                class="form-control mb-2"
-                id="name"
-                placeholder="Tên danh mục (Ví dụ: Smartphone)"
-                required
-              />
-              <textarea
-                class="form-control mb-2"
-                id="description"
-                placeholder="Mô tả"
-              ></textarea>
-              <input
-                type="file"
-                class="form-control mb-2"
-                id="imageURL"
-                accept="image/*"
-              />
-              <select class="form-select" id="parentCategory">
-                <option value="">Không có cha</option>
-              </select>
+              <div class="mb-3">
+                <label for="name" class="form-label">Tên Danh mục</label>
+                <input type="text" class="form-control" id="name" required />
+              </div>
+              <div class="mb-3">
+                <label for="description" class="form-label">Mô tả</label>
+                <textarea
+                  class="form-control"
+                  id="description"
+                  rows="3"
+                ></textarea>
+              </div>
+              <div class="mb-3">
+                <label for="imageURL" class="form-label">URL Hình ảnh</label>
+                <input type="url" class="form-control" id="imageURL" />
+              </div>
+              <div class="mb-3">
+                <label for="parentCategory" class="form-label"
+                  >Danh mục cha</label
+                >
+                <select class="form-select" id="parentCategory">
+                  <option value="">-- Không có --</option>
+                </select>
+              </div>
             </form>
           </div>
           <div class="modal-footer">
-            <button class="btn btn-secondary" data-bs-dismiss="modal">
-              <i class="fas fa-times"></i> Hủy
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Đóng
             </button>
-            <button class="btn btn-primary" onclick="saveCategory()">
-              <i class="fas fa-save"></i> Lưu
+            <button type="submit" form="categoryForm" class="btn btn-primary">
+              Lưu Danh mục
             </button>
           </div>
         </div>
       </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../assets/js/api.js"></script>
     <script src="../assets/js/auth.js"></script>
+
     <script>
-      if (getRole() !== "ADMIN") {
-        alert("Không có quyền!");
-        window.location.href = "/";
-      }
+      let allCategories = [];
+      let currentEditId = null;
 
-      function resetCategoryForm() {
-        document.getElementById("categoryForm").reset();
-        document.getElementById("categoryId").value = "";
-        document.getElementById("modalTitle").textContent = "Thêm danh mục";
-      }
-
+      /**
+       * Tải danh sách danh mục từ API và hiển thị
+       */
       async function loadCategories() {
-        const categories = await GET("/categories");
-        const tbody = document.getElementById("categoryTable");
+        try {
+          const res = await GET("/categories");
 
-        tbody.innerHTML = categories
-          .map(
-            (c) => `
-        <tr>
-          <td>${c.name}</td>
-          <td>${c.description || "—"}</td>
-          <td><span class="badge bg-info">${
-            c.parentCategory?.name || "Root"
-          }</span></td>
-          <td>
-            <button class="btn btn-sm btn-warning me-2 shadow-sm" onclick="editCategory('${
-              c._id
-            }')"><i class="fas fa-edit"></i> Sửa</button>
-            <button class="btn btn-sm btn-danger shadow-sm" onclick="deleteCategory('${
-              c._id
-            }')"><i class="fas fa-trash"></i> Xóa</button>
-          </td>
-        </tr>
-      `
-          )
-          .join("");
+          // 🚨 LOGIC TRÍCH XUẤT DỮ LIỆU ĐỘC LẬP (ĐÃ SỬA)
+          // Nếu API thành công (res.success) và chứa mảng data
+          if (res && res.success && Array.isArray(res.data)) {
+            allCategories = res.data;
+          } else if (Array.isArray(res)) {
+            // Trường hợp file api.js cũ trả thẳng mảng data
+            allCategories = res;
+          } else {
+            allCategories = [];
+            // Ném lỗi sử dụng message nếu có
+            throw new Error(
+              res.message || "Dữ liệu danh mục trả về không hợp lệ."
+            );
+          }
 
-        const select = document.getElementById("parentCategory");
-        select.innerHTML =
-          "<option value=''>Không có cha</option>" +
-          categories
-            .map((c) => `<option value="${c._id}">${c.name}</option>`)
-            .join("");
+          renderCategoryList(allCategories);
+          populateParentDropdown(allCategories);
+        } catch (error) {
+          console.error("Lỗi tải danh mục:", error);
+          document.getElementById(
+            "categoryList"
+          ).innerHTML = `<tr><td colspan="5" class="text-center text-danger">Không thể tải dữ liệu: ${
+            error.message || "Lỗi kết nối hoặc API server"
+          }</td></tr>`;
+        }
       }
 
-      async function editCategory(id) {
-        const c = await GET(`/categories/${id}`);
-        document.getElementById("categoryId").value = c._id;
-        document.getElementById("name").value = c.name;
-        document.getElementById("description").value = c.description || "";
-        document.getElementById("parentCategory").value =
-          c.parentCategory?._id || "";
-        // Lưu ý: Không thể đặt giá trị cho input type="file"
-        document.getElementById("modalTitle").textContent = "Sửa danh mục";
-        new bootstrap.Modal(document.getElementById("categoryModal")).show();
-      }
+      /**
+       * Render danh sách danh mục vào bảng
+       */
+      function renderCategoryList(categories) {
+        const listBody = document.getElementById("categoryList");
 
-      async function saveCategory() {
-        const id = document.getElementById("categoryId").value;
-
-        const file = document.getElementById("imageURL").files[0];
-        const body = {
-          name: document.getElementById("name").value,
-          description: document.getElementById("description").value,
-          parentCategory:
-            document.getElementById("parentCategory").value || null,
-        };
-
-        // 🎯 Tạm thời xử lý PUT/POST dưới dạng JSON nếu không có file mới
-        if (!file) {
-          // PUT/POST JSON
-        } else {
-          // Trường hợp có file, cần dùng FormData và endpoint /upload/single (giống products.html)
-          // Do logic UPLOAD_SINGLE không được định nghĩa rõ ràng, ta tạm thời sử dụng JSON/cần bổ sung logic upload
-          alert(
-            "Tính năng upload ảnh danh mục cần được hoàn thiện bằng FormData và API upload."
-          );
+        if (!Array.isArray(categories)) {
+          listBody.innerHTML =
+            '<tr><td colspan="5" class="text-center text-danger">Dữ liệu danh mục bị lỗi.</td></tr>';
           return;
         }
 
+        listBody.innerHTML = "";
+        if (categories.length === 0) {
+          listBody.innerHTML =
+            '<tr><td colspan="5" class="text-center text-muted">Chưa có danh mục nào.</td></tr>';
+          return;
+        }
+
+        categories.forEach((cat) => {
+          const row = listBody.insertRow();
+          row.insertCell().textContent = cat._id ? cat._id.slice(-4) : "N/A";
+          row.insertCell().textContent = cat.name;
+          row.insertCell().textContent = cat.parentCategory
+            ? cat.parentCategory.name || cat.parentCategory._id.slice(-4)
+            : "---";
+          row.insertCell().textContent = cat.description || "";
+
+          const actionsCell = row.insertCell();
+          actionsCell.innerHTML = `
+            <button class="btn btn-sm btn-warning me-2" onclick="editCategory('${cat._id}')">
+              <i class="fas fa-edit"></i> Sửa
+            </button>
+            <button class="btn btn-sm btn-danger" onclick="deleteCategory('${cat._id}', '${cat.name}')">
+              <i class="fas fa-trash-alt"></i> Xóa
+            </button>
+          `;
+        });
+      }
+
+      /**
+       * Điền dữ liệu danh mục vào dropdown chọn Danh mục cha
+       */
+      function populateParentDropdown(categories) {
+        const select = document.getElementById("parentCategory");
+        select
+          .querySelectorAll('option:not([value=""])')
+          .forEach((opt) => opt.remove());
+
+        categories.forEach((cat) => {
+          const option = document.createElement("option");
+          option.value = cat._id;
+          option.textContent = cat.name;
+          select.appendChild(option);
+        });
+      }
+
+      /**
+       * Hiển thị modal để sửa danh mục
+       */
+      function editCategory(id) {
+        const cat = allCategories.find((c) => c._id === id);
+        if (!cat) return;
+
+        currentEditId = id;
+        document.getElementById(
+          "categoryModalLabel"
+        ).textContent = `Sửa Danh mục: ${cat.name}`;
+        document.getElementById("name").value = cat.name;
+        document.getElementById("description").value = cat.description || "";
+        document.getElementById("imageURL").value = cat.imageURL || "";
+
+        const parentId =
+          cat.parentCategory && cat.parentCategory._id
+            ? cat.parentCategory._id
+            : "";
+        document.getElementById("parentCategory").value = parentId;
+
+        const modal = new bootstrap.Modal(
+          document.getElementById("categoryModal")
+        );
+        modal.show();
+      }
+
+      /**
+       * Đặt lại form và trạng thái sửa
+       */
+      function resetForm() {
+        currentEditId = null;
+        document.getElementById("categoryModalLabel").textContent =
+          "Tạo Danh mục mới";
+        document.getElementById("categoryForm").reset();
+      }
+
+      /**
+       * Xóa danh mục
+       */
+      async function deleteCategory(id, name) {
+        if (!confirm(`Bạn có chắc chắn muốn xóa danh mục "${name}"?`)) return;
+
         try {
-          id
-            ? await PUT(`/categories/${id}`, body)
-            : await POST("/categories", body);
-          bootstrap.Modal.getInstance(
-            document.getElementById("categoryModal")
-          ).hide();
+          const res = await DELETE(`/categories/${id}`);
+          alert(res.message);
           loadCategories();
-        } catch (err) {
-          alert("Lỗi: " + err.message);
+        } catch (error) {
+          alert(
+            "Lỗi xóa: " +
+              (error.message ||
+                "Danh mục có thể đang chứa sản phẩm hoặc lỗi kết nối.")
+          );
         }
       }
 
-      async function deleteCategory(id) {
-        if (confirm("Xóa danh mục? (Xóa mềm)")) {
-          await DEL(`/categories/${id}`);
-          loadCategories();
+      /**
+       * Thêm listeners cho form (được gọi sau DOMContentLoaded)
+       */
+      function initializeListeners() {
+        const categoryForm = document.getElementById("categoryForm");
+
+        if (!categoryForm) {
+          console.error("Không tìm thấy form#categoryForm.");
+          return;
         }
+
+        categoryForm.addEventListener("submit", async function (event) {
+          event.preventDefault();
+
+          const name = document.getElementById("name").value;
+          const description = document.getElementById("description").value;
+          const imageURL = document.getElementById("imageURL").value;
+          const parentCategory =
+            document.getElementById("parentCategory").value || null;
+
+          const data = { name, description, imageURL, parentCategory };
+          let res;
+
+          try {
+            if (currentEditId) {
+              // Chức năng Sửa (PUT)
+              res = await PUT(`/categories/${currentEditId}`, data);
+              alert(res.message || "Cập nhật danh mục thành công!");
+            } else {
+              // Chức năng Thêm mới (POST)
+              res = await POST("/categories", data);
+              alert(res.message || "Tạo danh mục thành công!");
+            }
+
+            // Đóng modal và tải lại
+            const modal = bootstrap.Modal.getInstance(
+              document.getElementById("categoryModal")
+            );
+            if (modal) modal.hide();
+
+            resetForm();
+            loadCategories();
+          } catch (error) {
+            alert(
+              "Lỗi: " + (error.message || "Không thể thực hiện hành động.")
+            );
+          }
+        });
       }
 
-      document.addEventListener("DOMContentLoaded", loadCategories);
+      // Khởi tạo: Đảm bảo mọi thứ chạy sau khi DOM đã tải xong
+      document.addEventListener("DOMContentLoaded", () => {
+        loadCategories();
+        initializeListeners();
+      });
     </script>
   </body>
 </html>

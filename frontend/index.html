@@ -16,7 +16,8 @@
     <style>
       /* CSS TỐI ƯU MỚI */
       :root {
-        --bs-border-radius: 0.75rem; /* Tăng độ bo tròn tổng thể */
+        --bs-border-radius: 0.75rem;
+        --bs-primary: #0d6efd;
       }
       .category-section {
         margin-bottom: 4rem;
@@ -24,39 +25,62 @@
         padding-bottom: 2rem;
       }
       .category-title {
-        border-left: 5px solid #0d6efd;
+        border-left: 5px solid #ffc107;
         padding-left: 1rem;
         margin-bottom: 2rem;
         font-weight: 700;
         color: #333;
       }
 
-      /* ĐIỀU CHỈNH CARD SẢN PHẨM */
+      /* CARD SẢN PHẨM */
       .product-card {
         height: 100%;
         display: flex;
         flex-direction: column;
         border-radius: var(--bs-border-radius) !important;
+        transition: all 0.3s ease;
+        border: 1px solid #e8e8e8;
       }
+      .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+        border-color: var(--bs-primary);
+      }
+
       .card-img-container {
         height: 160px;
-        background-color: #fff;
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
         display: flex;
         justify-content: center;
         align-items: center;
         overflow: hidden;
-        border-bottom: 1px solid #eee;
+        border-bottom: 1px solid #e8e8e8;
         border-top-left-radius: var(--bs-border-radius);
         border-top-right-radius: var(--bs-border-radius);
+        position: relative;
+      }
+      .card-img-container::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--bs-primary), #6c757d);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+      .product-card:hover .card-img-container::after {
+        opacity: 1;
       }
       .card-img-top-custom {
         max-width: 100%;
         max-height: 100%;
         object-fit: contain;
-        transition: transform 0.3s ease;
+        transition: transform 0.4s ease;
       }
       .card-img-top-custom:hover {
-        transform: scale(1.05);
+        transform: scale(1.08);
       }
       .card-body {
         padding: 0.75rem;
@@ -66,50 +90,84 @@
         margin-bottom: 0.25rem !important;
         height: 38px;
         overflow: hidden;
+        font-weight: 500;
       }
-      .filter-box {
-        background-color: #f8f9fa;
-        padding: 15px;
-        border-radius: var(--bs-border-radius) !important;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
-      }
-      /* Style cho Rating */
       .rating-stars .fa-star {
         color: #ffc107;
       }
-      /* CSS BANNER & SIDEBAR MỚI */
-      .carousel-inner .carousel-item img {
-        height: 300px !important;
-        object-fit: cover;
+
+      /* BANNER CAROUSEL */
+      .carousel-inner {
+        border-radius: var(--bs-border-radius);
+        overflow: hidden;
       }
+      .carousel-inner .carousel-item img {
+        width: 100%;
+        height: 400px;
+        object-fit: cover;
+        object-position: center;
+      }
+      @media (max-width: 992px) {
+        .carousel-inner .carousel-item img {
+          height: 300px;
+        }
+      }
+      @media (max-width: 768px) {
+        .carousel-inner .carousel-item img {
+          height: 220px;
+        }
+      }
+      @media (max-width: 576px) {
+        .carousel-inner .carousel-item img {
+          height: 180px;
+        }
+      }
+
+      /* SIDEBAR DANH MỤC */
       .category-sidebar-nav {
         background-color: #fff;
-        border: 1px solid #ddd;
+        border: 1px solid #e0e0e0;
         border-radius: var(--bs-border-radius);
         padding: 0;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
       }
       .category-sidebar-item {
-        padding: 10px 15px;
-        border-bottom: 1px solid #eee;
-        font-size: 1rem;
+        padding: 14px 18px;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 0.95rem;
         color: #333;
         display: flex;
-        justify-content: space-between;
         align-items: center;
         cursor: pointer;
-        transition: background-color 0.2s;
+        transition: all 0.25s ease;
+        justify-content: space-between;
       }
       .category-sidebar-item:hover {
-        background-color: #f8f9fa;
+        background: linear-gradient(90deg, #e3f2fd 0%, #f8f9fa 100%);
         color: var(--bs-primary);
+        padding-left: 22px;
+        border-left: 3px solid var(--bs-primary);
       }
       .category-sidebar-item:last-child {
         border-bottom: none;
       }
-      .category-sidebar-item i {
+      .category-sidebar-item .fa-solid,
+      .category-sidebar-item .fa-brands,
+      .category-sidebar-item .fa-regular {
         color: var(--bs-primary);
-        margin-right: 10px;
+        width: 28px;
+        text-align: center;
+        margin-right: 12px;
+        font-size: 1.1rem;
+      }
+      .category-sidebar-item:hover .fa-chevron-right {
+        transform: translateX(4px);
+        color: var(--bs-primary);
+      }
+      .category-sidebar-item .fa-chevron-right {
+        transition: transform 0.25s ease;
+        font-size: 0.8rem;
       }
     </style>
   </head>
@@ -239,6 +297,7 @@
         </div>
       </div>
     </div>
+
     <div class="container my-5">
       <div class="row">
         <div class="col-md-3">
@@ -293,9 +352,9 @@
                     checked
                     onchange="applyFilters()"
                   />
-                  <label class="form-check-label" for="cat-all">
-                    Tất cả sản phẩm
-                  </label>
+                  <label class="form-check-label" for="cat-all"
+                    >Tất cả sản phẩm</label
+                  >
                 </div>
                 <div class="text-center py-2" id="category-loader">
                   <div
@@ -343,9 +402,82 @@
       let currentLimit = 8;
       let currentQuery = {};
 
-      /**
-       * Tạo HTML cho các ngôi sao đánh giá
-       */
+      function getCategoryIcon(name) {
+        const nameLower = name
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+
+        if (
+          nameLower.includes("smartphone") ||
+          nameLower.includes("dienthoai") ||
+          nameLower.includes("dien thoai")
+        )
+          return "fa-mobile-alt";
+        if (nameLower.includes("phukien") || nameLower.includes("phu kien"))
+          return "fa-plug";
+        if (
+          nameLower.includes("laptop") ||
+          nameLower.includes("maytinh") ||
+          nameLower.includes("may tinh")
+        )
+          return "fa-laptop";
+        if (
+          nameLower.includes("tablet") ||
+          nameLower.includes("maytinhbang") ||
+          nameLower.includes("may tinh bang")
+        )
+          return "fa-tablet-alt";
+        if (
+          nameLower.includes("tainghe") ||
+          nameLower.includes("tai nghe") ||
+          nameLower.includes("amthanh")
+        )
+          return "fa-headphones";
+        if (
+          nameLower.includes("sac") ||
+          nameLower.includes("cuoc") ||
+          nameLower.includes("day cap")
+        )
+          return "fa-charging-station";
+        if (
+          nameLower.includes("dongho") ||
+          nameLower.includes("dong ho") ||
+          nameLower.includes("smartwatch") ||
+          nameLower.includes("smart watch")
+        )
+          return "fa-clock";
+        if (nameLower.includes("camera")) return "fa-camera";
+        if (nameLower.includes("loa") || nameLower.includes("amthanh"))
+          return "fa-volume-up";
+        if (
+          nameLower.includes("oplung") ||
+          nameLower.includes("op lung") ||
+          nameLower.includes("baoho") ||
+          nameLower.includes("bao ve")
+        )
+          return "fa-mobile-screen";
+        if (
+          nameLower.includes("apple") ||
+          nameLower.includes("iphone") ||
+          nameLower.includes("macbook") ||
+          nameLower.includes("ipad")
+        )
+          return "fa-brands fa-apple";
+        if (nameLower.includes("samsung") || nameLower.includes("galaxy"))
+          return "fa-brands fa-samsung";
+        if (nameLower.includes("xiaomi") || nameLower.includes("redmi"))
+          return "fa-mobile-alt";
+        if (
+          nameLower.includes("oppo") ||
+          nameLower.includes("vivo") ||
+          nameLower.includes("realme")
+        )
+          return "fa-mobile-alt";
+
+        return "fa-tag";
+      }
+
       function renderRating(rating) {
         const fullStars = Math.floor(rating);
         const hasHalfStar = rating % 1 !== 0;
@@ -364,12 +496,11 @@
         return html;
       }
 
-      /**
-       * Tải danh mục và hiển thị trong Sidebar LỌC VÀ SIDEBAR NHANH
-       */
       async function loadCategories() {
         try {
-          const categories = await GET("/categories");
+          const res = await GET("/categories");
+          const categories = res;
+
           const loader = document.getElementById("category-loader");
           const sidebarList = document.getElementById(
             "sidebar-categories-list"
@@ -378,22 +509,12 @@
           if (loader) loader.style.display = "none";
 
           if (categories && categories.length > 0) {
-            // --- 1. Tạo HTML cho Sidebar Lọc (Radio buttons) ---
             const radioHtml = categories
               .map(
                 (c) => `
                 <div class="form-check">
-                  <input
-                    class="form-check-input"
-                    type="radio"
-                    name="category-radio"
-                    id="cat-${c._id}"
-                    value="${c._id}"
-                    onchange="applyFilters()"
-                  />
-                  <label class="form-check-label" for="cat-${c._id}">
-                    ${c.name}
-                  </label>
+                  <input class="form-check-input" type="radio" name="category-radio" id="cat-${c._id}" value="${c._id}" onchange="applyFilters()" />
+                  <label class="form-check-label" for="cat-${c._id}">${c.name}</label>
                 </div>
               `
               )
@@ -403,28 +524,12 @@
               .closest(".form-check")
               .insertAdjacentHTML("afterend", radioHtml);
 
-            // --- 2. Tạo HTML cho Sidebar Nhanh (Links) ---
-            const iconMap = {
-              iphone: "fa-brands fa-apple",
-              samsung: "fa-brands fa-samsung",
-              laptop: "fa-laptop",
-              "máy tính bảng": "fa-tablet-alt",
-              "đồng hồ": "fa-watch",
-              "âm thanh": "fa-headphones",
-              "tin tức": "fa-newspaper",
-              "phụ kiện": "fa-battery-full",
-            };
-
             const linkHtml = categories
               .map((c) => {
-                const nameLower = c.name.toLowerCase();
-                const iconClass =
-                  Object.keys(iconMap).find((key) => nameLower.includes(key)) ||
-                  "fa-mobile-alt";
-
+                const iconClass = getCategoryIcon(c.name);
                 return `
                     <div class="category-sidebar-item" onclick="selectCategory('${c._id}')">
-                        <i class="fas ${iconClass}"></i> ${c.name}
+                        <i class="fa-solid ${iconClass} fa-fw"></i> ${c.name}
                         <i class="fas fa-chevron-right small text-muted"></i>
                     </div>
                 `;
@@ -432,6 +537,11 @@
               .join("");
 
             sidebarList.innerHTML = linkHtml;
+          } else {
+            const loader = document.getElementById("category-loader");
+            if (loader)
+              loader.innerHTML = `<p class="text-muted small">Không tìm thấy danh mục.</p>`;
+            sidebarList.innerHTML = `<p class="text-muted small p-2">Không tìm thấy danh mục.</p>`;
           }
 
           loadFeaturedCategories(categories);
@@ -440,21 +550,20 @@
           const loader = document.getElementById("category-loader");
           if (loader)
             loader.innerHTML = `<p class="text-danger small">Lỗi tải danh mục.</p>`;
-          // Xóa loader sidebar nhanh nếu lỗi
-          sidebarList.innerHTML = `<p class="text-danger small p-2">Lỗi tải danh mục.</p>`;
+          const sidebarList = document.getElementById(
+            "sidebar-categories-list"
+          );
+          if (sidebarList)
+            sidebarList.innerHTML = `<p class="text-danger small p-2">Lỗi tải danh mục.</p>`;
         }
       }
 
-      /**
-       * Áp dụng các bộ lọc từ Sidebar và tải lại sản phẩm chính
-       */
       function applyFilters(page = 1) {
         const search = document.getElementById("search-input").value.trim();
         const sort = document.getElementById("sort-select").value;
         const categoryRadio = document.querySelector(
           'input[name="category-radio"]:checked'
         );
-
         const category = categoryRadio ? categoryRadio.value : "";
 
         currentQuery = {};
@@ -463,7 +572,6 @@
         if (category) currentQuery.category = category;
 
         currentPage = page;
-
         loadProducts(
           currentQuery,
           currentPage,
@@ -472,9 +580,6 @@
         );
       }
 
-      /**
-       * Tải sản phẩm chính với phân trang, lọc và sắp xếp
-       */
       async function loadProducts(
         query = {},
         page = 1,
@@ -490,7 +595,6 @@
             page: page,
             limit: limit,
           }).toString();
-
           const res = await GET(`/products?${queryParams}`);
           const products = res.products;
           const pagination = res.pagination;
@@ -501,7 +605,6 @@
             return;
           }
 
-          // SỬ DỤNG col-md-3 để hiển thị 4 cột/hàng
           container.innerHTML = products
             .map(
               (p) => `<div class="col-md-3 mb-4">${createProductCard(p)}</div>`
@@ -516,9 +619,6 @@
         }
       }
 
-      /**
-       * Tải sản phẩm nổi bật theo từng danh mục
-       */
       async function loadFeaturedCategories(categories) {
         const container = document.getElementById("featured-categories");
         container.innerHTML = "";
@@ -534,24 +634,23 @@
               const categorySection = document.createElement("div");
               categorySection.className = "category-section";
               categorySection.innerHTML = `
-                          <h3 class="category-title mt-4">${category.name}</h3>
-                          <div class="row">
-                              ${products
-                                .map(
-                                  (p) =>
-                                    // SỬ DỤNG col-md-3 để hiển thị 4 cột/hàng
-                                    `<div class="col-md-3 mb-4">${createProductCard(
-                                      p
-                                    )}</div>`
-                                )
-                                .join("")}
-                          </div>
-                          <div class="text-end">
-                            <button class="btn btn-link" onclick="selectCategory('${
-                              category._id
-                            }')">Xem tất cả <i class="fas fa-arrow-right"></i></button>
-                          </div>
-                      `;
+                      <h3 class="category-title mt-4">${category.name}</h3>
+                      <div class="row">
+                          ${products
+                            .map(
+                              (p) =>
+                                `<div class="col-md-3 mb-4">${createProductCard(
+                                  p
+                                )}</div>`
+                            )
+                            .join("")}
+                      </div>
+                      <div class="text-end">
+                        <button class="btn btn-link" onclick="selectCategory('${
+                          category._id
+                        }')">Xem tất cả <i class="fas fa-arrow-right"></i></button>
+                      </div>
+                    `;
               container.appendChild(categorySection);
             }
           } catch (error) {
@@ -563,31 +662,20 @@
         }
       }
 
-      /**
-       * Chuyển danh mục được chọn trong Sidebar và tải lại sản phẩm chính
-       */
       function selectCategory(categoryId) {
-        // Cập nhật radio button lọc
         const radio = document.getElementById(`cat-${categoryId}`);
         if (radio) radio.checked = true;
-
-        // Cuộn tới khu vực lọc và áp dụng bộ lọc
         document
           .getElementById("filtered-products")
           .scrollIntoView({ behavior: "smooth" });
-
         applyFilters(1);
       }
 
-      /**
-       * Tạo thẻ sản phẩm (Card)
-       */
       function createProductCard(p) {
         const avgRating = p.avgRating ? p.avgRating.toFixed(1) : 0;
         const reviewCount = p.reviewCount || 0;
         const wishlistCount = p.wishlistCount || 0;
         const userLiked = p.userLiked || false;
-
         const wishlistIconClass = userLiked
           ? "fas text-danger"
           : "far text-danger";
@@ -595,27 +683,26 @@
         return `
             <div class="card h-100 shadow-sm product-card">
               <div class="card-img-container">
-                <img src="${p.images?.[0] || "/assets/img/no-image.png"}" 
-                   class="card-img-top-custom" alt="${p.name}">
+                <img src="${
+                  p.images?.[0] || "/assets/img/no-image.png"
+                }" class="card-img-top-custom" alt="${p.name}">
               </div>
               <div class="card-body d-flex flex-column">
                 <h5 class="card-title text-truncate">${p.name}</h5>
-                
                 <div class="mb-2 d-flex justify-content-between align-items-center">
                     <div>
-                       ${renderRating(avgRating)} 
-                       <span class="small text-muted">(${reviewCount} đánh giá)</span>
+                        ${renderRating(avgRating)} 
+                        <span class="small text-muted">(${reviewCount} đánh giá)</span>
                     </div>
                     <div class="text-secondary small">
                         <i class="${wishlistIconClass} fa-heart"></i> ${wishlistCount}
                     </div>
                 </div>
-
                 <p class="text-danger fw-bold fs-5">${p.price.toLocaleString()}đ</p>
-                
                 <div class="mt-auto d-flex gap-2">
-                  <a href="/user/product-detail.html?id=${p._id}" 
-                     class="btn btn-outline-primary flex-fill btn-sm"><i class="fas fa-eye"></i> Chi tiết</a>
+                  <a href="/user/product-detail.html?id=${
+                    p._id
+                  }" class="btn btn-outline-primary flex-fill btn-sm"><i class="fas fa-eye"></i> Chi tiết</a>
                   <button class="btn btn-success btn-sm" onclick="addToCart('${
                     p._id
                   }')"><i class="fas fa-shopping-cart"></i> Giỏ</button>
@@ -630,9 +717,6 @@
           `;
       }
 
-      /**
-       * Hàm tạo phân trang
-       */
       function renderPagination(pagination) {
         const ul = document.getElementById("product-pagination");
         ul.innerHTML = "";
@@ -641,20 +725,15 @@
 
         const { page, pages } = pagination;
 
-        // Nút Previous
-        ul.innerHTML += `
-              <li class="page-item ${page === 1 ? "disabled" : ""}">
+        ul.innerHTML += `<li class="page-item ${page === 1 ? "disabled" : ""}">
                   <a class="page-link" href="#" onclick="event.preventDefault(); applyFilters(${
                     page - 1
                   })">Trước</a>
-              </li>
-          `;
+              </li>`;
 
-        // Các nút số trang
         const startPage = Math.max(1, page - 2);
         const endPage = Math.min(pages, page + 2);
 
-        // Nút số 1
         if (startPage > 1) {
           ul.innerHTML += `<li class="page-item"><a class="page-link" href="#" onclick="event.preventDefault(); applyFilters(1)">1</a></li>`;
           if (startPage > 2)
@@ -662,33 +741,26 @@
         }
 
         for (let i = startPage; i <= endPage; i++) {
-          ul.innerHTML += `
-                  <li class="page-item ${page === i ? "active" : ""}">
-                      <a class="page-link" href="#" onclick="event.preventDefault(); applyFilters(${i})">${i}</a>
-                  </li>
-              `;
+          ul.innerHTML += `<li class="page-item ${page === i ? "active" : ""}">
+                          <a class="page-link" href="#" onclick="event.preventDefault(); applyFilters(${i})">${i}</a>
+                      </li>`;
         }
 
-        // Nút số cuối
         if (endPage < pages) {
           if (endPage < pages - 1)
             ul.innerHTML += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
           ul.innerHTML += `<li class="page-item"><a class="page-link" href="#" onclick="event.preventDefault(); applyFilters(${pages})">${pages}</a></li>`;
         }
 
-        // Nút Next
-        ul.innerHTML += `
-              <li class="page-item ${page === pages ? "disabled" : ""}">
+        ul.innerHTML += `<li class="page-item ${
+          page === pages ? "disabled" : ""
+        }">
                   <a class="page-link" href="#" onclick="event.preventDefault(); applyFilters(${
                     page + 1
                   })">Sau</a>
-              </li>
-          `;
+              </li>`;
       }
 
-      // ====================================================
-      // LOGIC CHỨC NĂNG (ĐƯỢC GIỮ NGUYÊN)
-      // ====================================================
       async function addToCart(productId) {
         if (!isLoggedIn()) return (window.location.href = "/login.html");
         try {

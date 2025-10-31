@@ -14,20 +14,26 @@
     />
     <link rel="stylesheet" href="../assets/css/style.css" />
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <link
+      href="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.css"
+      type="text/css"
+    />
+
     <style>
       :root {
         --bs-border-radius: 0.75rem;
       }
-      #map-container {
+      #map {
         height: 500px;
         border-radius: var(--bs-border-radius);
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         overflow: hidden;
-      }
-      #map-iframe {
-        width: 100%;
-        height: 100%;
-        border: 0;
       }
       .store-list-item {
         cursor: pointer;
@@ -68,13 +74,7 @@
         </div>
 
         <div class="col-md-8">
-          <div id="map-container">
-            <iframe
-              id="map-iframe"
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.6644073030235!2d106.69970921473138!3d10.76014389232938!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752f3607ccfddb%3A0x868b555d44477c7f!2sDistrict%201%2C%20Ho%20Chi%20Minh%20City%2C%20Vietnam!5e0!3m2!1sen!2s!4v1700000000000!5m2!1sen!2s"
-              allowfullscreen
-            ></iframe>
-          </div>
+          <div id="map"></div>
           <div
             class="alert alert-info mt-3"
             id="directionsLink"
@@ -84,44 +84,112 @@
       </div>
     </div>
 
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
+    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.js"></script>
+
+    <script src="../assets/js/config.js"></script>
+
     <script src="../assets/js/api.js"></script>
     <script src="../assets/js/auth.js"></script>
+
     <script>
-      // 🎯 DỮ LIỆU VỊ TRÍ GIẢ ĐỊNH TẠI TP. HCM
+      // 🔑 ĐỌC KEY TỪ ENV_CONFIG
+      const MAPBOX_TOKEN = ENV_CONFIG.MAPBOX_TOKEN;
+      mapboxgl.accessToken = MAPBOX_TOKEN;
+
+      // Biến lưu tọa độ thực tế của người dùng [Lng, Lat]
+      let userCoordinates = null;
+
       const stores = [
         {
           id: 1,
           name: "PhoneShop Quận 1 (Trụ sở chính)",
           address: "123 Đường Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP.HCM",
           phone: "028 1234 5678",
+          coords: [106.7025, 10.7735],
         },
         {
           id: 2,
           name: "PhoneShop Quận 3",
           address: "456 Võ Văn Tần, Phường 6, Quận 3, TP.HCM",
           phone: "028 9876 5432",
+          coords: [106.683, 10.776],
         },
         {
           id: 3,
           name: "PhoneShop Thủ Đức",
           address: "789 Đường Kha Vạn Cân, Phường Linh Chiểu, TP. Thủ Đức",
           phone: "028 3333 4444",
+          coords: [106.745, 10.849],
         },
         {
           id: 4,
           name: "PhoneShop Quận 7",
           address: "101 Nguyễn Thị Thập, Phường Tân Quy, Quận 7, TP.HCM",
           phone: "028 5555 6666",
+          coords: [106.711, 10.743],
         },
       ];
 
-      // 🎯 HIỂN THỊ DANH SÁCH CỬA HÀNG
+      let map;
+      let directions;
+
+      /**
+       * Khởi tạo bản đồ Mapbox và Geolocation Control.
+       */
+      function initializeMap() {
+        map = new mapboxgl.Map({
+          container: "map",
+          style: "mapbox://styles/mapbox/streets-v12",
+          center: [106.701, 10.774],
+          zoom: 12,
+        });
+
+        // Thêm Geolocation Control (Định vị người dùng)
+        const geoLocateControl = new mapboxgl.GeolocateControl({
+          positionOptions: { enableHighAccuracy: true },
+          trackUserLocation: true,
+          showUserHeading: true,
+        });
+
+        map.addControl(geoLocateControl);
+
+        // Lắng nghe sự kiện vị trí được tìm thấy
+        geoLocateControl.on("geolocate", (e) => {
+          userCoordinates = [e.coords.longitude, e.coords.latitude];
+          console.log("Vị trí người dùng đã được cập nhật:", userCoordinates);
+
+          // Nếu có cửa hàng đang được chọn, tự động tính lại đường đi
+          const activeEl = document.querySelector(".store-list-item.active");
+          if (activeEl) {
+            const idMatch = activeEl.getAttribute("onclick").match(/\((\d+)\)/);
+            if (idMatch && idMatch[1]) {
+              selectStore(parseInt(idMatch[1]));
+            }
+          }
+        });
+
+        // Thêm Directions Control (Chỉ đường)
+        directions = new MapboxDirections({
+          accessToken: MAPBOX_TOKEN, // Sử dụng biến đã lấy từ config
+          unit: "metric",
+          profile: "mapbox/driving",
+          controls: { instructions: true, profileSwitcher: false },
+          interactive: false,
+        });
+
+        map.addControl(directions, "top-left");
+      }
+
+      /**
+       * HIỂN THỊ DANH SÁCH CỬA HÀNG
+       */
       function renderStoreList() {
         const listContent = document.getElementById("store-list-content");
         listContent.innerHTML = stores
           .map(
             (store) => `
-            <div class="list-group-item store-list-item p-3" onclick="selectStore(${store.id}, '${store.address}')">
+            <div class="list-group-item store-list-item p-3" onclick="selectStore(${store.id})">
                 <h6 class="text-primary mb-1">${store.name}</h6>
                 <p class="mb-0 small text-muted"><i class="fas fa-location-arrow me-2"></i> ${store.address}</p>
                 <p class="mb-0 small text-success"><i class="fas fa-phone me-2"></i> ${store.phone}</p>
@@ -132,43 +200,50 @@
       }
 
       /**
-       * Xử lý chọn cửa hàng, cập nhật iframe để hiển thị vị trí và tạo link chỉ đường.
+       * Xử lý chọn cửa hàng, tính toán và vẽ chỉ đường.
        */
-      function selectStore(id, destinationAddress) {
+      function selectStore(id) {
         // 1. Highlight mục được chọn
         document
           .querySelectorAll(".store-list-item")
           .forEach((el) => el.classList.remove("active"));
         document
-          .querySelector(
-            `.list-group-item[onclick="selectStore(${id}, '${destinationAddress}')"]`
-          )
+          .querySelector(`.list-group-item[onclick="selectStore(${id})"]`)
           .classList.add("active");
 
-        const storeName = stores.find((s) => s.id === id).name;
+        const selectedStore = stores.find((s) => s.id === id);
+        const storeName = selectedStore.name;
 
-        const encodedDestination = encodeURIComponent(destinationAddress);
-        const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodedDestination}&travelmode=driving`;
+        // ⚠️ KIỂM TRA VỊ TRÍ NGƯỜI DÙNG
+        if (!userCoordinates) {
+          directions.clear();
+          document.getElementById("directionsLink").style.display = "block";
+          document.getElementById("directionsLink").className =
+            "alert alert-warning mt-3";
+          document.getElementById("directionsLink").innerHTML = `
+                 <i class="fas fa-exclamation-triangle"></i> 
+                 Vui lòng cho phép truy cập vị trí và bấm vào biểu tượng định vị <i class="fas fa-location-arrow"></i> trên bản đồ để xác định điểm xuất phát!
+              `;
+          return;
+        }
 
-        const directionsLinkEl = document.getElementById("directionsLink");
-        const iframe = document.getElementById("map-iframe");
+        // 2. Tính toán và vẽ đường đi
+        directions.setOrigin(userCoordinates);
+        directions.setDestination(selectedStore.coords);
 
-        // 2. CẬP NHẬT IFRAME để hiển thị VỊ TRÍ MỚI (Mô phỏng "chỉ đường trong trang")
-        // Sử dụng mode 'q' cho tìm kiếm/vị trí nhúng công khai
-        iframe.src = `https://maps.google.com/maps?q=${encodedDestination}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
-
-        directionsLinkEl.style.display = "block";
-        directionsLinkEl.innerHTML = `
+        // 3. Cập nhật thông báo
+        document.getElementById("directionsLink").className =
+          "alert alert-info mt-3";
+        document.getElementById("directionsLink").style.display = "block";
+        document.getElementById("directionsLink").innerHTML = `
              <i class="fas fa-route"></i> 
-             Vị trí hiện tại của <b>${storeName}</b>
-             <a href="${directionsUrl}" target="_blank" class="btn btn-sm btn-success ms-3 shadow-sm">
-                 <i class="fas fa-external-link-alt"></i> Bắt đầu Chỉ đường (Mở Maps)
-             </a>
+             **Đường đi** từ vị trí của bạn đến <b>${storeName}</b> đang được hiển thị trên bản đồ.
           `;
       }
 
       document.addEventListener("DOMContentLoaded", () => {
         renderStoreList();
+        initializeMap();
       });
     </script>
   </body>

@@ -74,6 +74,12 @@ function updateNavbar() {
       icon: "fas fa-tachometer-alt",
     },
     { href: "/admin/products.html", text: "Sản phẩm", icon: "fas fa-box" },
+    // 🎯 ĐÃ THAY THẾ ROLES BẰNG CATEGORIES
+    {
+      href: "/admin/categories.html",
+      text: "Danh mục",
+      icon: "fas fa-list-alt",
+    },
     { href: "/admin/orders.html", text: "Đơn hàng", icon: "fas fa-receipt" },
     { href: "/admin/users.html", text: "Người dùng", icon: "fas fa-users" },
     { href: "/admin/coupons.html", text: "Mã giảm giá", icon: "fas fa-gift" },
@@ -84,7 +90,7 @@ function updateNavbar() {
       text: "Thông báo",
       icon: "fas fa-bell",
     },
-    { href: "/admin/roles.html", text: "Roles", icon: "fas fa-user-tag" },
+    // ❌ ĐÃ BỎ TRANG ROLES
     {
       href: "/admin/payments.html",
       text: "Giao dịch",
@@ -120,7 +126,12 @@ function updateNavbar() {
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav me-auto">
-          <li class="nav-item"><a class="nav-link text-white" href="/index.html"><i class="fas fa-home me-2"></i>Trang chủ</a></li>
+          
+          ${
+            !isAdminPage || !isAdmin
+              ? `<li class="nav-item"><a class="nav-link text-white" href="/index.html"><i class="fas fa-home me-2"></i>Trang chủ</a></li>`
+              : ""
+          }
           
           ${!isAdminPage && isUser ? userNavItems : ""}
           

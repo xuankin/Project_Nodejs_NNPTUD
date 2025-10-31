@@ -58,4 +58,29 @@ router.delete(
     }
   }
 );
+router.put("/:id", Authentication, Authorization("ADMIN"), async (req, res) => {
+  try {
+    const { name, description, imageURL, parentCategory } = req.body;
+
+    // Lưu ý: Nếu parentCategory là chuỗi rỗng (''), ta nên lưu là null
+    const updateFields = {
+      name,
+      description,
+      imageURL,
+      parentCategory: parentCategory || null,
+    };
+
+    const cat = await Category.findByIdAndUpdate(
+      req.params.id,
+      updateFields,
+      { new: true, runValidators: true } // new: true trả về document đã update
+    );
+
+    if (!cat) return Response(res, 404, false, "Không tìm thấy danh mục");
+
+    Response(res, 200, true, "Cập nhật danh mục thành công");
+  } catch (err) {
+    Response(res, 500, false, err.message);
+  }
+});
 module.exports = router;
