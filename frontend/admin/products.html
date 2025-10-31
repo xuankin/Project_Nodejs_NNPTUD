@@ -174,8 +174,7 @@
     <script>
       let currentProductsData = [];
       let currentProduct = null;
-
-      // 🚨 KHAI BÁO CỤC BỘ ĐỂ SỬ DỤNG TRONG FETCH FILE UPLOAD
+      // Khai báo lại API_URL nếu nó không được export/import đúng cách trong api.js
       // const API_URL = "http://localhost:3000";
 
       if (getRole() !== "ADMIN" && getRole() !== "SELLER") {
@@ -189,11 +188,14 @@
         document.getElementById("modalTitle").textContent = "Thêm sản phẩm";
         document.getElementById("currentImagesPreview").innerHTML = "";
         currentProduct = null;
+        // 🎯 Đảm bảo input stock được kích hoạt lại cho chức năng Thêm mới
+        document.getElementById("stock").disabled = false;
       }
 
       /**
        * 🎯 HÀM UPLOAD ĐỘC LẬP: Sử dụng fetch thuần túy
        * Trả về { path: '/uploads/...' }
+       * (Giả định API_URL có thể truy cập được)
        */
       async function uploadSingleFile(file) {
         const formData = new FormData();
@@ -202,22 +204,20 @@
         const token = localStorage.getItem("token");
         const headers = {};
         if (token) {
-          // Chỉ cần Authorization header
           headers["Authorization"] = `Bearer ${token}`;
         }
 
         try {
-          // Sử dụng fetch trực tiếp: KHÔNG CẦN Content-Type
+          // Lỗi nếu API_URL không được định nghĩa. Cần đảm bảo nó được định nghĩa ở đâu đó.
           const response = await fetch(API_URL + "/upload/single", {
             method: "POST",
             headers: headers,
-            body: formData, // Trình duyệt tự đặt Content-Type: multipart/form-data
+            body: formData,
           });
 
           const data = await response.json();
 
           if (!response.ok || !data.success || !data.path) {
-            // Ném lỗi nếu status không phải 2xx HOẶC path là null/undefined
             throw new Error(data.message || "Upload file thất bại.");
           }
 
@@ -287,7 +287,12 @@
           document.getElementById("name").value = p.name;
           document.getElementById("description").value = p.description;
           document.getElementById("price").value = p.price;
+          // 🎯 ĐIỀU CHỈNH: Hiện thị tồn kho cũ (product.stock) để người dùng xem/biết
           document.getElementById("stock").value = p.stock;
+
+          // 🎯 ĐIỀU CHỈNH LỖI LOGIC: Vô hiệu hóa input#stock khi SỬA
+          // Tồn kho phải được quản lý qua trang Inventory.
+          document.getElementById("stock").disabled = true;
 
           document.getElementById("category").value =
             p.category?._id || p.category;
@@ -330,6 +335,7 @@
 
           alert("Xóa ảnh thành công! Vui lòng mở lại hộp thoại Sửa.");
 
+          // Hide modal and reload
           bootstrap.Modal.getInstance(
             document.getElementById("productModal")
           ).hide();
@@ -353,10 +359,18 @@
           name: document.getElementById("name").value,
           description: document.getElementById("description").value,
           price: parseFloat(document.getElementById("price").value),
-          stock: parseInt(document.getElementById("stock").value),
           category: document.getElementById("category").value,
           images: finalImages,
         };
+
+        // 🎯 LÔGIC SỬA LỖI TỒN KHO:
+        // 1. Chỉ thêm trường 'stock' vào body khi THÊM MỚI (POST) để khởi tạo kho.
+        // 2. Khi CẬP NHẬT (PUT), chúng ta không gửi trường 'stock' lên.
+        if (!id) {
+          body.stock = parseInt(document.getElementById("stock").value);
+        }
+        // Khi id có giá trị (PUT), body không chứa 'stock', do đó backend sẽ bỏ qua
+        // logic đồng bộ tồn kho sai lệch.
 
         const files = document.getElementById("images").files;
         if (files.length > 0) {
@@ -368,7 +382,6 @@
             const results = await Promise.all(uploadPromises);
 
             results.forEach((res) => {
-              // 🚨 LƯU Ý: Chỉ thêm vào finalImages nếu path tồn tại
               if (res && res.path) {
                 body.images.push(res.path);
               }
@@ -381,17 +394,22 @@
 
         try {
           const apiCall = id
-            ? PUT(`/products/${id}`, body)
-            : POST("/products", body);
+            ? PUT(`/products/${id}`, body) // body không có stock
+            : POST("/products", body); // body có stock ban đầu
 
           await apiCall;
 
+          // Hide modal and reload
           bootstrap.Modal.getInstance(
             document.getElementById("productModal")
           ).hide();
           loadProducts();
           alert(`Sản phẩm ${id ? "cập nhật" : "thêm mới"} thành công!`);
         } catch (err) {
+          // 🎯 Đảm bảo input stock được kích hoạt lại nếu lỗi xảy ra khi POST
+          if (id && document.getElementById("stock")) {
+            document.getElementById("stock").disabled = false;
+          }
           alert("Lỗi: " + err.message);
         }
       }
@@ -399,6 +417,7 @@
       async function deleteProduct(id) {
         if (confirm("Xóa mềm sản phẩm này? (Kho cũng bị xóa mềm)")) {
           try {
+            // Xóa mềm sản phẩm cũng xóa mềm Inventory liên quan
             await DEL(`/products/${id}`);
             loadProducts();
             alert("Xóa mềm sản phẩm thành công!");

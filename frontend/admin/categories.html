@@ -258,11 +258,14 @@
       /**
        * Xóa danh mục
        */
+      // Cập nhật trong <script> của tệp HTML
+
       async function deleteCategory(id, name) {
         if (!confirm(`Bạn có chắc chắn muốn xóa danh mục "${name}"?`)) return;
 
         try {
-          const res = await DELETE(`/categories/${id}`);
+          // 🚨 Thay đổi tên hàm gọi API từ DELETE thành DEL
+          const res = await DEL(`/categories/${id}`);
           alert(res.message);
           loadCategories();
         } catch (error) {
