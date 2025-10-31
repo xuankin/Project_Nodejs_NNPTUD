@@ -89,6 +89,7 @@
             <td>${new Date(o.createdAt).toLocaleDateString()}</td>
             <td>
               ${
+                // 🎯 ĐIỀU CHỈNH: Nút Thanh toán chỉ hiện khi Pending và không phải COD
                 o.status === "Pending" && o.paymentMethod !== "COD"
                   ? `<a href="/user/payment.html?orderId=${o._id}" class="btn btn-sm btn-info me-2 text-white shadow-sm">
                         <i class="bi bi-credit-card"></i> Thanh toán

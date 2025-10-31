@@ -1,3 +1,4 @@
+// schemas/order.js
 const mongoose = require("mongoose");
 const softDelete = require("./plugins/softDelete");
 
@@ -61,8 +62,15 @@ const orderSchema = new mongoose.Schema(
     // Phương thức thanh toán
     paymentMethod: {
       type: String,
-      enum: ["COD", "BANK", "MOMO", "ZALOPAY", "CARD"],
+      enum: ["COD", "BANK", "MOMO", "ZALOPAY", "CARD", "VNPAY"], // 🎯 BỔ SUNG VNPAY
       required: true,
+    },
+
+    // 🎯 BỔ SUNG: Liên kết với Payment
+    payment: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "payment",
+      default: null,
     },
 
     // Ghi chú thêm (nếu cần)

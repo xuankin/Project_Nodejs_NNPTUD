@@ -129,6 +129,7 @@
                   <label class="form-label">Phương thức thanh toán</label>
                   <select class="form-select" id="paymentMethod">
                     <option value="COD">Thanh toán khi nhận hàng (COD)</option>
+                    <option value="VNPAY">Thanh toán qua VNPay</option>
                     <option value="BANK">Chuyển khoản ngân hàng</option>
                     <option value="MOMO">Momo</option>
                     <option value="ZALOPAY">ZaloPay</option>
@@ -339,7 +340,7 @@
           modal.hide();
           document.getElementById("checkoutForm").reset();
 
-          // Chuyển hướng
+          // 🎯 Cập nhật logic chuyển hướng: Nếu là VNPay hoặc các phương thức khác COD, chuyển sang trang thanh toán chi tiết.
           if (paymentMethod !== "COD") {
             window.location.href = `/user/payment.html?orderId=${order._id}`;
           } else {

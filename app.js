@@ -7,7 +7,7 @@ var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 let mongoose = require("mongoose");
 // 🚨 BƯỚC SỬA LỖI: Tải biến từ file .env vào process.env
-require("dotenv").config();
+require("dotenv").config(); //
 
 // =======================
 // DATABASE CONNECTION
@@ -43,6 +43,7 @@ app.use("/roles", require("./routes/roles"));
 app.use("/auth", require("./routes/auth"));
 app.use("/upload", require("./routes/upload"));
 
+// 🎯 Đảm bảo các routes API đều bắt đầu bằng /api/ trong file cấu hình router chính (nếu có)
 app.use("/products", require("./routes/productRoutes"));
 app.use("/categories", require("./routes/categoryRoutes"));
 app.use("/orders", require("./routes/orderRoutes"));

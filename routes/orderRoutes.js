@@ -6,9 +6,9 @@ const router = express.Router();
 const Order = require("../schemas/order");
 const Cart = require("../schemas/cart");
 const Inventory = require("../schemas/inventory");
-const Coupon = require("../schemas/coupon"); // Đã import Coupon schema
+const Coupon = require("../schemas/coupon");
 const User = require("../schemas/user");
-const Payment = require("../schemas/payment"); // Cần thiết cho route PUT /status
+const Payment = require("../schemas/payment");
 const { sendOrderConfirmationEmail } = require("../services/emailService");
 
 const { Authentication, Authorization } = require("../utils/authMiddleware");
@@ -25,26 +25,32 @@ router.post(
   Authentication,
   Authorization("USER"),
   [
-    body("paymentMethod").isIn(["COD", "BANK", "MOMO", "ZALOPAY", "CARD"]),
+    // 🎯 SỬA LỖI VALIDATION: Bổ sung VNPAY
+    body("paymentMethod")
+      .isIn(["COD", "BANK", "MOMO", "ZALOPAY", "CARD", "VNPAY"])
+      .withMessage("Phương thức thanh toán không hợp lệ."),
     body("couponCode").optional().isString().trim(),
     body("shippingAddress.fullName").optional().trim().notEmpty(),
     body("shippingAddress.phone")
-      .optional()
-      .matches(/^[0-9]{10,11}$/),
+      // 🎯 SỬA LỖI VALIDATION: Chỉ cho phép số điện thoại 10 hoặc 11 chữ số
+      .matches(/^[0-9]{10,11}$/)
+      .withMessage("Số điện thoại phải có 10 hoặc 11 chữ số"),
     body("shippingAddress.address").optional().trim().notEmpty(),
   ],
   validatedResult,
   async (req, res) => {
     try {
-      const { couponCode, paymentMethod, shippingAddress, note } = req.body; // 1. Lấy giỏ hàng
+      const { couponCode, paymentMethod, shippingAddress, note } = req.body;
 
+      // 1. Lấy giỏ hàng
       const cart = await Cart.findOne({ user: req.userId }).populate(
         "items.product"
       );
       if (!cart || cart.items.length === 0) {
         return BadRequestResponse(res, "Giỏ hàng trống");
-      } // 2. KIỂM TRA KHO VÀ TÍNH TỔNG
+      }
 
+      // 2. KIỂM TRA KHO VÀ TÍNH TỔNG
       let totalAmount = 0;
       for (const item of cart.items) {
         const inv = await Inventory.findOne({ product: item.product._id });
@@ -57,8 +63,9 @@ router.post(
           );
         }
         totalAmount += item.product.price * item.quantity;
-      } // ========================================================== // 3. Áp dụng coupon (SỬ DỤNG METHOD TỪ SCHEMA) // ==========================================================
+      }
 
+      // 3. Áp dụng coupon
       let discount = 0;
       let couponId = null;
       let appliedCoupon = null;
@@ -84,9 +91,11 @@ router.post(
           // Bắt các lỗi từ method (không hợp lệ, không đủ minAmount)
           return BadRequestResponse(res, error.message);
         }
-      } // ==========================================================
-      const finalAmount = totalAmount - discount; // 4. Tạo đơn hàng
+      }
 
+      const finalAmount = totalAmount - discount;
+
+      // 4. Tạo đơn hàng
       const order = new Order({
         user: req.userId,
         items: cart.items.map((i) => ({
@@ -104,22 +113,25 @@ router.post(
         status: "Pending",
         statusHistory: [{ status: "Pending", date: new Date() }],
       });
-      await order.save(); // 5. TRỪ KHO
+      await order.save();
 
+      // 5. TRỪ KHO
       for (const item of cart.items) {
         await Inventory.updateOne(
           { product: item.product._id },
           { $inc: { currentStock: -item.quantity, quantityOut: item.quantity } }
         );
-      } // 6. XÓA GIỎ HÀNG VÀ TĂNG SỐ LẦN SỬ DỤNG COUPON
+      }
 
+      // 6. XÓA GIỎ HÀNG VÀ TĂNG SỐ LẦN SỬ DỤNG COUPON
       await Cart.deleteOne({ user: req.userId });
 
       // Tăng số lần sử dụng coupon (Chỉ khi coupon được áp dụng thành công)
       if (appliedCoupon) {
         await appliedCoupon.incrementUsedCount();
-      } // 7. GỬI EMAIL XÁC NHẬN ĐƠN HÀNG
+      }
 
+      // 7. GỬI EMAIL XÁC NHẬN ĐƠN HÀNG
       const user = await User.findById(req.userId).select("email fullName");
       const orderForEmail = await Order.findById(order._id).populate(
         "items.product",
@@ -129,8 +141,9 @@ router.post(
         await sendOrderConfirmationEmail(orderForEmail, user);
       } catch (emailErr) {
         console.error("Lỗi gửi email xác nhận:", emailErr);
-      } // 8. PHẢN HỒI THÀNH CÔNG
+      }
 
+      // 8. PHẢN HỒI THÀNH CÔNG
       Response(
         res,
         201,
@@ -218,7 +231,7 @@ router.get("/", Authentication, Authorization("ADMIN"), async (req, res) => {
   }
 });
 
-// PUT /orders/:id/status - ADMIN (Giữ nguyên)
+// PUT /orders/:id/status - ADMIN (Giữ nguyên logic thanh toán COD)
 router.put(
   "/:id/status",
   Authentication,
@@ -229,8 +242,9 @@ router.put(
       if (!status) return BadRequestResponse(res, "Thiếu trạng thái");
 
       const order = await Order.findById(req.params.id);
-      if (!order) return Response(res, 404, false, "Không tìm thấy"); // 🎯 LOGIC XÁC NHẬN COD
+      if (!order) return Response(res, 404, false, "Không tìm thấy");
 
+      // 🎯 LOGIC XÁC NHẬN COD
       if (order.paymentMethod === "COD" && status === "Delivered") {
         // Kiểm tra xem giao dịch đã tồn tại chưa (tránh tạo trùng lặp)
         const existingPayment = await Payment.findOne({
@@ -258,6 +272,7 @@ router.put(
     }
   }
 );
+
 // POST /orders/:id/cancel - USER (HOÀN KHO)
 router.post(
   "/:id/cancel",
@@ -273,8 +288,9 @@ router.post(
         return Response(res, 403, false, "Không có quyền");
       if (!["Pending", "Confirmed"].includes(order.status)) {
         return BadRequestResponse(res, "Không thể hủy trạng thái này");
-      } // HOÀN KHO
+      }
 
+      // HOÀN KHO
       for (const item of order.items) {
         await Inventory.updateOne(
           { product: item.product },
@@ -286,7 +302,7 @@ router.post(
             },
           }
         );
-      } // Giả định order.updateStatus là một method có sẵn
+      }
 
       await order.updateStatus("Cancelled", reason || "Người dùng hủy");
       Response(res, 200, true, order, "Hủy thành công");
